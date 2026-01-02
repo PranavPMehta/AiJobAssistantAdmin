@@ -1,0 +1,5 @@
+{
+  "name": "DRC Admin Panel",
+  "description": "A neon-themed admin dashboard for managing job seeker applications, user approvals, and profile management.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,31 @@
+Project: drc-admin-panel
+Location: c:\Users\HP\Downloads\drc-admin-panel
+
+Overview:
+This is a React-based Admin Panel for managing a job seeker ecosystem ("DRC"). It is built with Vite and TypeScript.
+The application features a dashboard, signup request management, and a user list. It has a mock authentication system.
+
+Structure:
+- .env.local: Environment variables (local).
+- App.tsx: The main application component dealing with routing, global state, authentication, and layout composition.
+- components/
+  - Layout.tsx: Main layout wrapper (sidebar, header).
+  - Modals.tsx: Contains modal components like UserFormModal, RejectModal, ApproveUserModal, ConfirmationModal.
+  - UI.tsx: generic UI components (Card, Button, Input).
+  - UserTable.tsx: Displays tables of users with various actions (approve, reject, edit, etc.).
+- services/
+  - mockData.ts: Contains initial mock data (INITIAL_USERS).
+- types.ts: TypeScript interfaces (User, UserStatus, etc.).
+- vite.config.ts: Configuration for Vite build tool.
+- package.json: Lists dependencies (React 19, Lucide React) and scripts.
+
+Key Tech Stack:
+- Framework: React 19
+- Language: TypeScript
+- Build Tool: Vite
+- Icons: lucide-react
+- Styling: Tailwind CSS (inferred from className usage).
+
+Data Models:
+- User: Standard user profile with fields like id, name, email, mobile, jobPosition, signupDate, status, password, isPremium.
+- UserStatus: States include Pending, Approved, Rejected, Deactivated.
