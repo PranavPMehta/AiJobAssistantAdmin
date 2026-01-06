@@ -14,15 +14,15 @@ interface UserTableProps {
   isPendingView: boolean;
 }
 
-export const UserTable: React.FC<UserTableProps> = ({ 
-  users, 
-  onApprove, 
-  onReject, 
-  onEdit, 
+export const UserTable: React.FC<UserTableProps> = ({
+  users,
+  onApprove,
+  onReject,
+  onEdit,
   onDeactivate,
   onReactivate,
   onTogglePremium,
-  isPendingView 
+  isPendingView
 }) => {
   if (users.length === 0) {
     return (
@@ -42,7 +42,7 @@ export const UserTable: React.FC<UserTableProps> = ({
               <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">User</th>
               <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider hidden md:table-cell">Contact</th>
               <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider hidden lg:table-cell">Position</th>
-              <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider hidden lg:table-cell">Joined</th>
+              <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider hidden lg:table-cell">Experience</th>
               <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
               <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Premium</th>
               <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
@@ -50,11 +50,11 @@ export const UserTable: React.FC<UserTableProps> = ({
           </thead>
           <tbody className="divide-y divide-slate-800">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-slate-800/50 transition-colors">
+              <tr key={user.user_id} className="hover:bg-slate-800/50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-neon-green font-bold border border-slate-700">
-                      {user.name.charAt(0)}
+                      {user.name?.charAt(0) || '?'}
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-white">{user.name}</div>
@@ -64,42 +64,42 @@ export const UserTable: React.FC<UserTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                   <div className="text-sm text-slate-300">{user.email}</div>
-                  <div className="text-xs text-slate-500">{user.mobile}</div>
+                  <div className="text-xs text-slate-500">{user.contact_number}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                  <div className="text-sm text-slate-300">{user.jobPosition}</div>
+                  <div className="text-sm text-slate-300">{user.job_title}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                   <div className="text-sm text-slate-400">
-                    {new Date(user.signupDate).toLocaleDateString()}
+                    {user.experience || 'N/A'}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusBadge status={user.status} />
+                  <StatusBadge status={user.status as any} />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                   {!isPendingView && user.status !== UserStatus.REJECTED ? (
-                      <Toggle 
-                        checked={user.isPremium} 
-                        onChange={(val) => onTogglePremium(user, val)} 
-                        disabled={user.status === UserStatus.DEACTIVATED}
-                      />
-                   ) : (
-                     <span className="text-slate-600 text-xs">-</span>
-                   )}
+                  {!isPendingView && user.status !== UserStatus.REJECTED ? (
+                    <Toggle
+                      checked={user.is_premium}
+                      onChange={(val) => onTogglePremium(user, val)}
+                      disabled={user.status === UserStatus.DEACTIVATED}
+                    />
+                  ) : (
+                    <span className="text-slate-600 text-xs">-</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end gap-2">
                     {isPendingView ? (
                       <>
-                        <button 
+                        <button
                           onClick={() => onApprove(user)}
                           className="p-1.5 text-neon-green hover:bg-neon-green/10 rounded-lg transition-colors"
                           title="Approve"
                         >
                           <Check size={18} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => onReject(user)}
                           className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                           title="Reject"
@@ -109,7 +109,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                       </>
                     ) : (
                       <>
-                        <button 
+                        <button
                           onClick={() => onEdit(user)}
                           className="p-1.5 text-neon-cyan hover:bg-neon-cyan/10 rounded-lg transition-colors"
                           title="Edit Details"
@@ -117,7 +117,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                           <Edit size={18} />
                         </button>
                         {user.status === UserStatus.DEACTIVATED ? (
-                          <button 
+                          <button
                             onClick={() => onReactivate(user)}
                             className="p-1.5 text-slate-400 hover:bg-neon-green/10 hover:text-neon-green rounded-lg transition-colors"
                             title="Reactivate"
@@ -125,7 +125,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                             <RotateCcw size={18} />
                           </button>
                         ) : (
-                          <button 
+                          <button
                             onClick={() => onDeactivate(user)}
                             className="p-1.5 text-slate-400 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors"
                             title="Deactivate"

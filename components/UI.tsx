@@ -9,17 +9,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  className = '', 
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
   isLoading,
   icon,
-  ...props 
+  ...props
 }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface-main disabled:opacity-50 disabled:cursor-not-allowed";
-  
+
   const variants = {
     primary: "bg-gradient-to-r from-neon-green to-neon-emerald text-white hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] focus:ring-neon-green border border-transparent",
     secondary: "bg-surface-hover text-white border border-slate-700 hover:bg-slate-700 focus:ring-slate-500",
@@ -34,7 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <button 
+    <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={isLoading || props.disabled}
       {...props}
@@ -57,18 +57,39 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, error, className = '', type, ...props }) => {
+  const [showPassword, setShowPassword] = React.useState(false);
+  const isPassword = type === 'password';
+  const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
   return (
     <div className="w-full">
       {label && <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>}
-      <input
-        className={`w-full bg-surface-main border ${error ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-colors disabled:opacity-50 ${className}`}
-        {...props}
-      />
+      <div className="relative">
+        <input
+          type={inputType}
+          className={`w-full bg-surface-main border ${error ? 'border-red-500' : 'border-slate-700'} rounded-lg px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green transition-colors disabled:opacity-50 ${isPassword ? 'pr-10' : ''} ${className}`}
+          {...props}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none"
+          >
+            {showPassword ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+            )}
+          </button>
+        )}
+      </div>
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );
 };
+
 
 // --- Select ---
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
