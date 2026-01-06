@@ -25,7 +25,7 @@ export const useStore = create<AppState>((set, get) => ({
     isAuthenticated: false,
     login: async (credentials) => {
         try {
-            const response = await api.post('/admin/login', credentials);
+            const response = await api.post('/admin/api/login', credentials);
             const adminData: AdminUser = response.data;
             set({ admin: adminData, isAuthenticated: true });
         } catch (error) {
@@ -43,7 +43,7 @@ export const useStore = create<AppState>((set, get) => ({
     fetchUsers: async () => {
         set({ isLoading: true });
         try {
-            const response = await api.get('/admin/users');
+            const response = await api.get('/admin/api/users');
             set({ users: response.data });
         } catch (error) {
             console.error('Fetch users failed:', error);
@@ -53,7 +53,7 @@ export const useStore = create<AppState>((set, get) => ({
     },
     updateUser: async (userId, data) => {
         try {
-            const response = await api.patch(`/admin/user/${userId}`, data);
+            const response = await api.patch(`/admin/api/user/${userId}`, data);
             const updatedUser = response.data;
 
             set((state) => ({
@@ -66,7 +66,7 @@ export const useStore = create<AppState>((set, get) => ({
     },
     createUser: async (data) => {
         try {
-            const response = await api.post('/admin/user', data);
+            const response = await api.post('/admin/api/user', data);
             const newUser = response.data;
             set((state) => ({
                 users: [...state.users, newUser],
