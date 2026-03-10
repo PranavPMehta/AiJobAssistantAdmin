@@ -1,36 +1,54 @@
-// Backend Enums/Types
 export enum UserStatus {
   PENDING = 'Pending',
-  APPROVED = 'Approved',
+  APPROVED = 'Approved', // Active
   REJECTED = 'Rejected',
   DEACTIVATED = 'Deactivated',
 }
 
 export interface User {
-  user_id: string; // UUID
+  id: string;
   name: string;
   email: string;
-  password?: string;
-  contact_number: string;
-  auth_provider?: string;
-  job_title: string;
-  job_location?: string;
-  job_type?: string;
-  salary?: string;
-  skills?: string[];
-  experience?: string;
-  is_premium: boolean;
-  status: string; // "Pending", "Approved", etc.
-  rejection_reason?: string; // Not explicitly in backend model snippet but commonly needed
+  mobile: string;
+  jobPosition: string;
+  signupDate: string; // ISO Date string
+  status: UserStatus;
+  password?: string; // Storing for demo purposes
+  rejectionReason?: string;
+  isPremium: boolean;
 }
 
-export interface AdminUser {
-  admin_id: string;
-  full_name: string;
-  username: string;
-  role: string;
-  is_active: boolean;
-  message?: string;
+export interface JobConnection {
+  name: string;
+  title: string;
+  contact: string;
+}
+
+export enum JobStatus {
+  SAVED = 'Saved',
+  APPLIED = 'Applied',
+  INTERVIEW = 'Interview',
+  OFFER = 'Offer',
+  REJECTED = 'Rejected',
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  jobType: string;
+  salary: string;
+  experience: string;
+  skills: string[];
+  website: string;
+  status: JobStatus;
+  insights: string;
+  proofs: string[]; // Mock file paths/names
+  resume: string;   // Mock file path/name
+  connections: JobConnection[];
+  remarks: string;
+  createdAt: string;
 }
 
 export interface ToastMessage {
@@ -40,4 +58,4 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
 }
 
-export type ViewState = 'dashboard' | 'requests' | 'users';
+export type ViewState = 'dashboard' | 'requests' | 'users' | 'jobs';
