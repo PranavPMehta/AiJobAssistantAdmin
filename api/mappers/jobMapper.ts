@@ -23,18 +23,23 @@ const safeParse = (value: any) => {
  */
 export const mapJobFromApi = (j: any): AdminJobRow => {
   return {
-    id: j.job_id,
+    id: j.job_id ?? j.id,
 
-    jobTitle: j.job_title ?? "",
+    jobTitle: j.job_title ?? j.jobTitle ?? j.title ?? "",
     company: j.company ?? "",
     location: j.location ?? "",
-    jobType: j.job_type ?? "",
+    jobType: j.job_type ?? j.jobType ?? "",
+    salary: j.salary ?? "",
+    experience: j.experience ?? "",
 
     keySkills: Array.isArray(j.key_skills)
       ? j.key_skills
-      : safeParse(j.key_skills),
+      : Array.isArray(j.keySkills)
+        ? j.keySkills
+        : safeParse(j.key_skills),
 
-    applicationUrl: j.application_url ?? "",
+    applicationUrl: j.application_url ?? j.applicationUrl ?? j.website ?? "",
+    description: j.insights ?? j.description ?? "",
 
     status: (j.status || "SAVED") as JobStatus,
 
@@ -46,7 +51,7 @@ export const mapJobFromApi = (j: any): AdminJobRow => {
 
     remarks: j.remarks ?? "",
 
-    createdAt: j.created_at ?? null
+    createdAt: j.created_at ?? j.createdAt ?? null
   };
 }; 
 

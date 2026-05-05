@@ -6,20 +6,26 @@ import {
   FileText,
   Users,
   Briefcase,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { AdminJobRow, JobStatus } from "../api/types";
 import { mapJobsFromApi } from "../api/mappers/jobMapper";
-import { getAllJobs, updateJob } from "../api/adminJobApi";
+import { getAllJobs, getJobsFromResponse, updateJob } from "../api/adminJobApi";
 
 import { JobFormModal } from "./Modals";
 
 interface JobTableProps {
+  jobs?: any[];
+  pageSize?: number;
   onEdit?: (job: AdminJobRow) => void;
   onStatusChange?: (job: AdminJobRow, newStatus: JobStatus) => void;
 }
 
 export const JobTable: React.FC<JobTableProps> = ({
+  jobs: jobsProp,
+  pageSize = 20,
   onEdit,
   onStatusChange,
 }) => {
@@ -37,7 +43,31 @@ export const JobTable: React.FC<JobTableProps> = ({
   const [titleFilter, setTitleFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
 
-  const jobsPerPage = 20;
+  const jobsPerPage = pageSize;
+  const visiblePages = 7;
+
+  const formatCreatedAt = (createdAt: any) => {
+    if (!createdAt) return "-";
+
+    const date = Array.isArray(createdAt)
+      ? new Date(
+          createdAt[0],
+          createdAt[1] - 1,
+          createdAt[2],
+          createdAt[3] || 0,
+          createdAt[4] || 0,
+          createdAt[5] || 0
+        )
+      : new Date(createdAt);
+
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   /* ================= FILTER ================= */
 
@@ -51,14 +81,14 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   if (dateFilter) {
 
-  if (Array.isArray(job.createdAt)) {
+  const createdAt = job.createdAt;
+  const jobDate = Array.isArray(createdAt)
+    ? new Date(createdAt[0], createdAt[1] - 1, createdAt[2])
+    : new Date(createdAt || "");
 
-    const jobDate = new Date(
-      job.createdAt[0],
-      job.createdAt[1] - 1,
-      job.createdAt[2]
-    );
-
+  if (Number.isNaN(jobDate.getTime())) {
+    dateMatch = false;
+  } else {
     const formatted =
       jobDate.getFullYear() +
       "-" +
@@ -67,11 +97,6 @@ export const JobTable: React.FC<JobTableProps> = ({
       String(jobDate.getDate()).padStart(2, "0");
 
     dateMatch = formatted === dateFilter;
-
-  } else {
-
-    dateMatch = false;
-
   }
 
 }
@@ -88,6 +113,18 @@ export const JobTable: React.FC<JobTableProps> = ({
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  const pageWindowStart = Math.max(
+    1,
+    Math.min(
+      currentPage - Math.floor(visiblePages / 2),
+      Math.max(1, totalPages - visiblePages + 1)
+    )
+  );
+  const pageWindowEnd = Math.min(totalPages, pageWindowStart + visiblePages - 1);
+  const pageNumbers = Array.from(
+    { length: pageWindowEnd - pageWindowStart + 1 },
+    (_, i) => pageWindowStart + i
+  );
 
   /* ================= FETCH JOBS ================= */
 
@@ -96,7 +133,7 @@ export const JobTable: React.FC<JobTableProps> = ({
       setLoading(true);
 
       const res: any = await getAllJobs();
-      const mappedJobs = mapJobsFromApi(res.jobs);
+      const mappedJobs = mapJobsFromApi(getJobsFromResponse(res));
 
       setJobs(mappedJobs);
 
@@ -113,8 +150,20 @@ export const JobTable: React.FC<JobTableProps> = ({
   };
 
   useEffect(() => {
+    if (jobsProp) {
+      setJobs(mapJobsFromApi(jobsProp));
+      setLoading(false);
+      return;
+    }
+
     fetchJobs();
-  }, []);
+  }, [jobsProp]);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   /* ================= EDIT ================= */
 
@@ -144,6 +193,26 @@ export const JobTable: React.FC<JobTableProps> = ({
 
       console.error("Update failed", err);
 
+    }
+  };
+
+  const handleStatusChange = async (job: AdminJobRow, newStatus: JobStatus) => {
+    setJobs((prev) =>
+      prev.map((item) =>
+        item.id === job.id ? { ...item, status: newStatus } : item
+      )
+    );
+
+    try {
+      await updateJob(job.id, { ...job, status: newStatus });
+      onStatusChange?.(job, newStatus);
+    } catch (err) {
+      console.error("Status update failed", err);
+      setJobs((prev) =>
+        prev.map((item) =>
+          item.id === job.id ? { ...item, status: job.status } : item
+        )
+      );
     }
   };
 
@@ -214,39 +283,46 @@ export const JobTable: React.FC<JobTableProps> = ({
 
       {/* ================= FILTER BAR ================= */}
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-col gap-3 mb-4 rounded-lg border border-slate-800 bg-surface-card p-3 md:flex-row md:items-center md:justify-between">
 
-        <input
-          type="text"
-          placeholder="Filter by Job Title"
-          value={titleFilter}
-          onChange={(e) => {
-            setTitleFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm"
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            type="text"
+            placeholder="Filter by job title"
+            value={titleFilter}
+            onChange={(e) => {
+              setTitleFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-10 w-full min-w-[220px] rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 outline-none focus:border-neon-green sm:w-72"
+          />
 
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => {
-            setDateFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="px-3 py-2 bg-slate-900 border border-slate-700 rounded text-sm"
-        />
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => {
+              setDateFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 outline-none focus:border-neon-green"
+          />
 
-        <button
-          onClick={() => {
-            setTitleFilter("");
-            setDateFilter("");
-            setCurrentPage(1);
-          }}
-          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded"
-        >
-          Clear
-        </button>
+          <button
+            onClick={() => {
+              setTitleFilter("");
+              setDateFilter("");
+              setCurrentPage(1);
+            }}
+            className="h-10 rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-slate-200 hover:bg-slate-700"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div className="text-sm text-slate-400">
+          Showing {filteredJobs.length === 0 ? 0 : indexOfFirstJob + 1}-
+          {Math.min(indexOfLastJob, filteredJobs.length)} of {filteredJobs.length}
+        </div>
 
       </div>
 
@@ -257,25 +333,25 @@ export const JobTable: React.FC<JobTableProps> = ({
 
         <div className="overflow-x-auto">
 
-          <table className="min-w-full divide-y divide-slate-800">
+          <table className="min-w-[1180px] w-full divide-y divide-slate-800 table-fixed">
 
             <thead className="bg-slate-900/50">
 
               <tr>
 
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">SR</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Job Title</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Company</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Location</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Created At</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Skills</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Website</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase text-center">Connections</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase text-center">Proof</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase text-center">Resume</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase">Remarks</th>
-                <th className="px-4 py-3 text-xs text-slate-500 uppercase text-right">Edit</th>
+                <th className="w-12 px-4 py-3 text-left text-xs text-slate-500 uppercase">SR</th>
+                <th className="w-48 px-4 py-3 text-left text-xs text-slate-500 uppercase">Job Title</th>
+                <th className="w-40 px-4 py-3 text-left text-xs text-slate-500 uppercase">Company</th>
+                <th className="w-32 px-4 py-3 text-left text-xs text-slate-500 uppercase">Location</th>
+                <th className="w-28 px-4 py-3 text-left text-xs text-slate-500 uppercase">Created</th>
+                <th className="w-36 px-4 py-3 text-left text-xs text-slate-500 uppercase">Skills</th>
+                <th className="w-20 px-4 py-3 text-left text-xs text-slate-500 uppercase">Website</th>
+                <th className="w-36 px-4 py-3 text-left text-xs text-slate-500 uppercase">Status</th>
+                <th className="w-28 px-4 py-3 text-center text-xs text-slate-500 uppercase">Links</th>
+                <th className="w-20 px-4 py-3 text-center text-xs text-slate-500 uppercase">Proof</th>
+                <th className="w-20 px-4 py-3 text-center text-xs text-slate-500 uppercase">Resume</th>
+                <th className="w-52 px-4 py-3 text-left text-xs text-slate-500 uppercase">Remarks</th>
+                <th className="w-16 px-4 py-3 text-right text-xs text-slate-500 uppercase">Edit</th>
 
               </tr>
 
@@ -293,7 +369,7 @@ export const JobTable: React.FC<JobTableProps> = ({
 
                   <td className="px-4 py-4">
                     <div className="text-sm font-medium text-white">
-                      {job.jobTitle}
+                      <span className="line-clamp-2">{job.jobTitle}</span>
                     </div>
                     <div className="text-xs text-slate-500">
                       {job.jobType}
@@ -301,28 +377,15 @@ export const JobTable: React.FC<JobTableProps> = ({
                   </td>
 
                   <td className="px-4 py-4 text-sm text-slate-300">
-                    {job.company}
+                    <span className="line-clamp-2">{job.company}</span>
                   </td>
 
                   <td className="px-4 py-4 text-sm text-slate-400">
-                    {job.location}
+                    <span className="line-clamp-2">{job.location}</span>
                   </td>
 
                 <td className="px-4 py-4 text-sm text-slate-400">
-  {Array.isArray(job.createdAt)
-    ? new Date(
-        job.createdAt[0],
-        job.createdAt[1] - 1,
-        job.createdAt[2],
-        job.createdAt[3],
-        job.createdAt[4],
-        job.createdAt[5]
-      ).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "-"}
+  {formatCreatedAt(job.createdAt)}
 </td>
 
                   <td className="px-4 py-4">
@@ -357,12 +420,9 @@ export const JobTable: React.FC<JobTableProps> = ({
                     <select
                       value={job.status}
                       onChange={(e) =>
-                        onStatusChange?.(
-                          job,
-                          e.target.value as JobStatus
-                        )
+                        handleStatusChange(job, e.target.value as JobStatus)
                       }
-                      className={`text-xs px-2 py-1 rounded-full border bg-transparent ${getStatusColor(
+                      className={`w-full text-xs px-2 py-1 rounded-lg border bg-slate-950 ${getStatusColor(
                         job.status
                       )}`}
                     >
@@ -396,8 +456,8 @@ export const JobTable: React.FC<JobTableProps> = ({
                     />
                   </td>
 
-                  <td className="px-4 py-4 text-xs text-slate-400 truncate">
-                    {job.remarks || "No remarks"}
+                  <td className="px-4 py-4 text-xs text-slate-400">
+                    <span className="line-clamp-2">{job.remarks || "No remarks"}</span>
                   </td>
 
                   <td className="px-4 py-4 text-right">
@@ -427,34 +487,58 @@ export const JobTable: React.FC<JobTableProps> = ({
 
         <button
           disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-          className="px-3 py-1 text-sm bg-slate-800 border border-slate-700 rounded disabled:opacity-40"
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 disabled:opacity-40"
+          aria-label="Previous page"
         >
-          Prev
+          <ChevronLeft size={16} />
         </button>
 
-        {Array.from({ length: totalPages }, (_, i) => (
+        {pageWindowStart > 1 && (
+          <>
+            <button
+              onClick={() => setCurrentPage(1)}
+              className="h-9 min-w-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-300"
+            >
+              1
+            </button>
+            <span className="px-1 text-slate-500">...</span>
+          </>
+        )}
 
+        {pageNumbers.map((page) => (
           <button
-            key={i}
-            onClick={() => setCurrentPage(i + 1)}
-            className={`px-3 py-1 text-sm border rounded ${
-              currentPage === i + 1
-                ? "bg-neon-cyan text-black"
-                : "bg-slate-800 border-slate-700"
+            key={page}
+            onClick={() => setCurrentPage(page)}
+            className={`h-9 min-w-9 rounded-lg border px-3 text-sm ${
+              currentPage === page
+                ? "border-neon-cyan bg-neon-cyan text-black"
+                : "border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
-            {i + 1}
+            {page}
           </button>
-
         ))}
+
+        {pageWindowEnd < totalPages && (
+          <>
+            <span className="px-1 text-slate-500">...</span>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              className="h-9 min-w-9 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-slate-300"
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
 
         <button
           disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-          className="px-3 py-1 text-sm bg-slate-800 border border-slate-700 rounded disabled:opacity-40"
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 disabled:opacity-40"
+          aria-label="Next page"
         >
-          Next
+          <ChevronRight size={16} />
         </button>
 
       </div>
@@ -465,7 +549,7 @@ export const JobTable: React.FC<JobTableProps> = ({
         open={modalOpen}
         job={selectedJob}
         onClose={() => setModalOpen(false)}
-        onUpdate={handleUpdate}
+        onSuccess={fetchJobs}
       />
 
     </>

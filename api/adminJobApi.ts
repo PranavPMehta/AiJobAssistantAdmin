@@ -17,6 +17,7 @@ const mapJobToApi = (data: any) => {
     experience: data.experience || null,
     key_skills: data.keySkills || [],
     application_url: data.applicationUrl || null,
+    status: data.status || "Saved",
     insights: data.description || null,
     remarks: data.remarks || null,
     connections: data.connections || [],
@@ -45,6 +46,14 @@ export const getAllJobs = async () => {
   console.log("📥 JOBS RESPONSE:", res);
 
   return res;
+};
+
+export const getJobsFromResponse = (res: any) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.jobs)) return res.jobs;
+  if (Array.isArray(res?.data?.jobs)) return res.data.jobs;
+  if (Array.isArray(res?.data)) return res.data;
+  return [];
 };
 
 

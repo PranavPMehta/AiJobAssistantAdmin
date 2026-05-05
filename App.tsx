@@ -25,6 +25,12 @@ import {
 import { User, UserStatus, ViewState, Job, JobStatus } from "./types";
 import { adminLogin as loginAdmin } from "./api/adminApi";
 import axiosClient from "./api/axiosClient";
+import {
+  clearAdminSession,
+  extractAdminSessionToken,
+  hasAdminSession,
+  setAdminSessionToken,
+} from "./api/authSession";
 /* =====================================================
    LOGIN SCREEN
 ===================================================== */
@@ -44,7 +50,17 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
     try {
       const res: any = await loginAdmin({ username, password });
 
-      localStorage.setItem("admin_token", res?.token || "logged_in");
+      console.log("LOGIN RESPONSE:", res);
+
+      const token = extractAdminSessionToken(res);
+
+      if (token) {
+        setAdminSessionToken(token);
+      } else {
+        console.error("Login response did not include a session token:", res);
+        setError("Login failed: no session token received from backend");
+        return;
+      }
 
       onLogin();
     } catch (err: any) {
@@ -142,9 +158,7 @@ const DashboardStats = ({ users, jobs }: { users: User[]; jobs: Job[] }) => {
 ===================================================== */
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("admin_token"),
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(hasAdminSession());
 
   const [view, setView] = useState<ViewState>("dashboard");
 
@@ -396,6 +410,18 @@ const handleTogglePremium = async (user: User, value: boolean) => {
     loadStats();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      clearAdminSession();
+      setIsAuthenticated(false);
+    };
+
+    window.addEventListener("admin-session-expired", handleExpiredSession);
+    return () => {
+      window.removeEventListener("admin-session-expired", handleExpiredSession);
+    };
+  }, []);
+
   if (!isAuthenticated) {
     return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
   }
@@ -405,7 +431,10 @@ const handleTogglePremium = async (user: User, value: boolean) => {
       <Layout
         currentView={view}
         onChangeView={setView}
-        onLogout={() => setIsAuthenticated(false)}
+        onLogout={() => {
+          clearAdminSession();
+          setIsAuthenticated(false);
+        }}
       >
         {view === "dashboard" && (
           <div className="animate-fadeIn">
@@ -426,7 +455,7 @@ const handleTogglePremium = async (user: User, value: boolean) => {
               </Card>
 
               <Card title="Recent Jobs Added">
-                <JobTable jobs={jobs.slice(0, 5)} />
+                <JobTable jobs={jobs} pageSize={5} />
               </Card>
             </div>
           </div>

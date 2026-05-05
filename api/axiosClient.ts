@@ -1,20 +1,29 @@
 import axios from "axios";
+import {
+  ADMIN_SESSION_HEADER_NAMES,
+  clearAdminSession,
+  getAdminSessionToken,
+} from "./authSession";
+
+const isDev = window.location.hostname === "localhost";
 
 const axiosClient = axios.create({
-  baseURL: "https://dheerajrathodconsult.com",
+  baseURL: isDev ? "" : "https://dheerajrathodconsult.com",
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 10000,
+  withCredentials: true,
 });
 
-// ✅ Request interceptor (future token support)
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("admin_token");
+    const token = getAdminSessionToken();
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      ADMIN_SESSION_HEADER_NAMES.forEach((headerName) => {
+        config.headers.set(headerName, token);
+      });
     }
 
     return config;
@@ -22,11 +31,17 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Response interceptor
 axiosClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    console.error("API Error:", error.response?.data || error.message);
+    const message = error.response?.data?.message || error.response?.data || error.message;
+    console.error("API Error:", message);
+
+    if (error.response?.status === 401) {
+      clearAdminSession();
+      window.dispatchEvent(new Event("admin-session-expired"));
+    }
+
     return Promise.reject(error);
   }
 );

@@ -7,9 +7,13 @@ export const getAllUsers = async () => {
 
   const res = await axiosClient.get("/admin/users");
 
-  console.log("API RESPONSE:", res.data);
+  console.log("API RESPONSE:", res);
 
-  const rawUsers = res.data?.users ?? res.data ?? [];
+  const rawUsers =
+    (res as any)?.users ??
+    (res as any)?.data?.users ??
+    (Array.isArray(res) ? res : (res as any)?.data) ??
+    [];
 
   console.log("RAW USERS:", rawUsers);
 
@@ -48,11 +52,13 @@ export const createUser = async (data: any) => {
 
   const res = await axiosClient.post("/admin/user", payload);
 
-  console.log("CREATE RESPONSE:", res.data);
+  console.log("CREATE RESPONSE:", res);
 
-  if (!res.data) return null;
+  const createdUser = (res as any)?.user ?? (res as any)?.data ?? res;
 
-  return mapUserFromBackend(res.data);
+  if (!createdUser) return null;
+
+  return mapUserFromBackend(createdUser);
 
 };
 
@@ -88,11 +94,13 @@ export const updateUser = async (userId: string, data: any) => {
 
   const res = await axiosClient.patch(`/admin/user/${userId}`, payload);
 
-  console.log("UPDATE RESPONSE:", res.data);
+  console.log("UPDATE RESPONSE:", res);
 
-  if (!res.data) return null;
+  const updatedUser = (res as any)?.user ?? (res as any)?.data ?? res;
 
-  return mapUserFromBackend(res.data);
+  if (!updatedUser) return null;
+
+  return mapUserFromBackend(updatedUser);
 };
 
 export const updateUserStatus = async (
@@ -116,5 +124,5 @@ export const updateUserStatus = async (
 
   const res = await axiosClient.patch(`/admin/user/${userId}`, payload);
 
-  return res.data;
+  return (res as any)?.data ?? res;
 };

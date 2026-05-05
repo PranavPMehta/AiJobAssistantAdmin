@@ -7,13 +7,13 @@ import { getAllUsers } from "../api/adminUserApi";
 
 interface UserTableProps {
   users?: User[];
-  onApprove: (user: User) => void;
-  onReject: (user: User) => void;
-  onEdit: (user: User) => void;
-  onDeactivate: (user: User) => void;
-  onReactivate: (user: User) => void;
-  onTogglePremium: (user: User, newValue: boolean) => void;
-  isPendingView: boolean;
+  onApprove?: (user: User) => void;
+  onReject?: (user: User) => void;
+  onEdit?: (user: User) => void;
+  onDeactivate?: (user: User) => void;
+  onReactivate?: (user: User) => void;
+  onTogglePremium?: (user: User, newValue: boolean) => void;
+  isPendingView?: boolean;
 }
 
 export const UserTable: React.FC<UserTableProps> = ({
@@ -36,7 +36,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
     console.log("Users prop received:", users);
 
-    if (users && users.length > 0) {
+    if (users !== undefined) {
       console.log("Using users from props");
       setInternalUsers(users);
       return;
@@ -75,7 +75,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   /* ================= FINAL DATA ================= */
 
   const rawData =
-  users && users.length > 0
+  users !== undefined
     ? users
     : internalUsers;
 
@@ -275,7 +275,7 @@ const data = rawData.filter(
     <Toggle
       checked={Boolean(user.isPremium ?? user.is_premium)}
       onChange={(val) =>
-        onTogglePremium(user, val)
+        onTogglePremium?.(user, val)
       }
       disabled={
         user.status === UserStatus.DEACTIVATED
@@ -299,11 +299,11 @@ const data = rawData.filter(
                       {isPendingView ? (
 
                         <>
-                          <button onClick={() => onApprove(user)}>
+                          <button onClick={() => onApprove?.(user)}>
                             <Check size={18} />
                           </button>
 
-                          <button onClick={() => onReject(user)}>
+                          <button onClick={() => onReject?.(user)}>
                             <X size={18} />
                           </button>
                         </>
@@ -311,19 +311,21 @@ const data = rawData.filter(
                       ) : (
 
                         <>
+                          {onEdit && (
                           <button onClick={() => onEdit(user)}>
                             <Edit size={18} />
                           </button>
+                          )}
 
                           {user.status === UserStatus.DEACTIVATED ? (
 
-                            <button onClick={() => onReactivate(user)}>
+                            onReactivate && <button onClick={() => onReactivate(user)}>
                               <RotateCcw size={18} />
                             </button>
 
                           ) : (
 
-                            <button onClick={() => onDeactivate(user)}>
+                            onDeactivate && <button onClick={() => onDeactivate(user)}>
                               <Power size={18} />
                             </button>
 

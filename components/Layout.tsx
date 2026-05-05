@@ -86,7 +86,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
 
       {/* Main Content */}
       <main className="flex-1 pt-16 md:pt-0 overflow-y-auto">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="w-full p-4 md:p-6 xl:p-8 max-w-[1800px] mx-auto">
           {children}
         </div>
       </main>

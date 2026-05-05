@@ -325,6 +325,27 @@ export const JobFormModal: React.FC<Props> = ({
               }
             />
 
+            <Input
+              label="Application URL"
+              type="url"
+              value={form.applicationUrl || ""}
+              onChange={(e) =>
+                setForm({ ...form, applicationUrl: e.target.value })
+              }
+            />
+
+            <Select
+              label="Status"
+              value={form.status || JobStatus.SAVED}
+              onChange={(e) =>
+                setForm({ ...form, status: e.target.value })
+              }
+              options={Object.values(JobStatus).map((status) => ({
+                label: status,
+                value: status
+              }))}
+            />
+
           </div>
 
           {/* SKILLS */}
@@ -454,11 +475,27 @@ export const JobFormModal: React.FC<Props> = ({
           <div>
 
             <label className="text-xs text-slate-400 mb-1 block">
+              Insights / Description
+            </label>
+
+            <textarea
+              className="w-full bg-surface-main border border-slate-700 rounded-lg p-3 text-slate-200 h-24 outline-none focus:border-neon-green"
+              value={form.description || ""}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+            />
+
+          </div>
+
+          <div>
+
+            <label className="text-xs text-slate-400 mb-1 block">
               Remarks / Notes
             </label>
 
             <textarea
-              className="w-full bg-surface-main border border-slate-700 rounded-lg p-3 text-slate-200 h-24"
+              className="w-full bg-surface-main border border-slate-700 rounded-lg p-3 text-slate-200 h-24 outline-none focus:border-neon-green"
               value={form.remarks || ""}
               onChange={(e) =>
                 setForm({ ...form, remarks: e.target.value })
@@ -500,4 +537,3 @@ export const JobFormModal: React.FC<Props> = ({
     </div>
   );
 };
-

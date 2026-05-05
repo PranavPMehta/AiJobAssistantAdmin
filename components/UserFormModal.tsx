@@ -144,15 +144,7 @@ export const UserFormModal: React.FC<Props> = ({
 
       } else {
 
-        await createUser({
-          name: form.name,
-          email: form.email,
-          contactNumber: form.contactNumber,
-          jobTitle: form.jobTitle,   
-          password: form.password,
-          status: form.status,
-          isPremium: form.isPremium
-        });
+        await createUser(data);
 
       }
 
@@ -237,13 +229,8 @@ export const UserFormModal: React.FC<Props> = ({
                 }
               />
 
-          {/* EDIT ONLY FIELDS */}
-
-          {isEdit && (
-            <>
-              
-
-              <Input
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
                 label="Job Location"
                 value={form.jobLocation}
                 onChange={(e) =>
@@ -251,7 +238,7 @@ export const UserFormModal: React.FC<Props> = ({
                 }
               />
 
-              <Input
+            <Input
                 label="Job Type"
                 value={form.jobType}
                 onChange={(e) =>
@@ -259,7 +246,7 @@ export const UserFormModal: React.FC<Props> = ({
                 }
               />
 
-              <Input
+            <Input
                 label="Salary"
                 value={form.salary}
                 onChange={(e) =>
@@ -267,7 +254,7 @@ export const UserFormModal: React.FC<Props> = ({
                 }
               />
 
-              <Input
+            <Input
                 label="Experience"
                 value={form.experience}
                 onChange={(e) =>
@@ -275,9 +262,11 @@ export const UserFormModal: React.FC<Props> = ({
                 }
               />
 
-              {/* SKILLS */}
+          </div>
 
-              <div>
+          {/* SKILLS */}
+
+          <div>
 
                 <label className="text-sm text-slate-400 block mb-1">
                   Skills
@@ -310,10 +299,7 @@ export const UserFormModal: React.FC<Props> = ({
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
                 />
 
-              </div>
-
-            </>
-          )}
+          </div>
 
           {/* PASSWORD */}
 

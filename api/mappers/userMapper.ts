@@ -9,18 +9,26 @@ export const mapUserFromBackend = (u: any): User => {
 
   return {
     userId: u.user_id,
+    user_id: u.user_id,
+    id: u.user_id,
     name: u.name ?? "",
     email: u.email ?? "",
     contactNumber: u.contact_number ?? "",
+    contact_number: u.contact_number ?? "",
     jobTitle: u.job_title ?? "",
+    job_title: u.job_title ?? "",
     jobLocation: u.job_location ?? "",
+    job_location: u.job_location ?? "",
     jobType: u.job_type ?? "",
+    job_type: u.job_type ?? "",
     salary: u.salary ?? "",
     experience: u.experience ?? "",
     skills: u.skills ?? [],
     createdAt: u.created_at ?? "",
+    created_at: u.created_at ?? "",
     status: u.status ?? "Approved",
-    isPremium: u.is_premium
+    isPremium: u.is_premium,
+    is_premium: u.is_premium
   };
 
 };

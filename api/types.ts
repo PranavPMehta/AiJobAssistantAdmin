@@ -39,15 +39,21 @@ export interface Job {
 export interface User {
 
   userId: string;
+  user_id?: string;
+  id?: string;
 
   email: string;
   name?: string;
 
   contactNumber?: string;
+  contact_number?: string;
 
   jobTitle?: string;
+  job_title?: string;
   jobLocation?: string;
+  job_location?: string;
   jobType?: string;
+  job_type?: string;
 
   salary?: string;
   skills?: string[];
@@ -55,9 +61,11 @@ export interface User {
   experience?: string;
 
   isPremium: boolean;
+  is_premium?: boolean;
   status: string;
 
   createdAt?: string | null;
+  created_at?: string | null;
   updatedAt?: string;
 
 }
@@ -94,10 +102,13 @@ export interface AdminJobRow {
   company: string;
   location: string;
   jobType: string;
+  salary?: string;
+  experience?: string;
 
   keySkills: string[];
 
   applicationUrl: string;
+  description?: string;
 
   status: JobStatus;
 
