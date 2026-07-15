@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Briefcase } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Briefcase, Phone, GraduationCap } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface LayoutProps {
@@ -17,6 +17,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
     { id: 'requests', label: 'Signup Requests', icon: UserPlus },
     { id: 'users', label: 'All Users', icon: Users },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
+    { id: 'discovery-call-enquiries', label: 'Discovery Call Forms', icon: Phone },
+    { id: 'ai-engineer-accelerator-enquiries', label: 'AI Accelerator Forms', icon: GraduationCap },
   ];
 
   return (
@@ -43,7 +45,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
             <span className="font-bold text-xl text-white tracking-tight">DRC<span className="text-neon-green">Admin</span></span>
           </div>
 
-          <nav className="flex-1 px-4 py-6 space-y-1">
+          <nav className="flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.id}

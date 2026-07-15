@@ -79,4 +79,35 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
 }
 
-export type ViewState = 'dashboard' | 'requests' | 'users' | 'jobs';
+export interface DiscoveryCallEnquiry {
+  enquiry_id: string;
+  full_name: string;
+  email: string;
+  whatsapp_number: string;
+  current_role: string;
+  target_role: string;
+  created_at?: string | number[] | null;
+  updated_at?: string | number[] | null;
+}
+
+export interface AiEngineerAcceleratorEnquiry {
+  enquiry_id: string;
+  first_name: string;
+  last_name: string;
+  work_email: string;
+  phone_number: string;
+  current_role: string;
+  experience: string;
+  python_level: string;
+  program_name: string;
+  created_at?: string | number[] | null;
+  updated_at?: string | number[] | null;
+}
+
+export type ViewState =
+  | 'dashboard'
+  | 'requests'
+  | 'users'
+  | 'jobs'
+  | 'discovery-call-enquiries'
+  | 'ai-engineer-accelerator-enquiries';

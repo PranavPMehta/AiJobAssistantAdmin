@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Layout } from "./components/Layout";
 import { UserTable } from "./components/UserTable";
 import { JobTable } from "./components/JobTable";
+import { DiscoveryCallEnquiryTable } from "./components/DiscoveryCallEnquiryTable";
+import { AiEngineerAcceleratorEnquiryTable } from "./components/AiEngineerAcceleratorEnquiryTable";
 import { Card, Button, Input } from "./components/UI";
 import { UserFormModal } from "./components/UserFormModal";
 import { JobFormModal } from "./components/Modals";
@@ -24,6 +26,10 @@ import {
 
 import { User, UserStatus, ViewState, Job, JobStatus } from "./types";
 import { adminLogin as loginAdmin } from "./api/adminApi";
+import {
+  getDiscoveryCallEnquiries,
+  getAiEngineerAcceleratorEnquiries,
+} from "./api/adminEnquiryApi";
 import axiosClient from "./api/axiosClient";
 import {
   clearAdminSession,
@@ -31,6 +37,7 @@ import {
   hasAdminSession,
   setAdminSessionToken,
 } from "./api/authSession";
+import { formatCreatedAt } from "./lib/formatDate";
 /* =====================================================
    LOGIN SCREEN
 ===================================================== */
@@ -280,6 +287,130 @@ const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     doc.save(`jobs_export_${Date.now()}.pdf`);
   };
 
+  const exportDiscoveryCallEnquiriesCSV = async () => {
+    const enquiries = await getDiscoveryCallEnquiries();
+
+    const headers = [
+      "ID",
+      "Full Name",
+      "Email",
+      "WhatsApp",
+      "Current Role",
+      "Target Role",
+      "Submitted",
+    ];
+
+    const rows = enquiries.map((e) => [
+      e.enquiry_id,
+      e.full_name,
+      e.email,
+      e.whatsapp_number,
+      e.current_role,
+      e.target_role,
+      formatCreatedAt(e.created_at),
+    ]);
+
+    const csv =
+      "data:text/csv;charset=utf-8," +
+      headers.join(",") +
+      "\n" +
+      rows.map((row) => row.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csv));
+    link.setAttribute("download", `discovery_call_enquiries_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportDiscoveryCallEnquiriesExcel = async () => {
+    const enquiries = await getDiscoveryCallEnquiries();
+
+    const data = enquiries.map((e) => ({
+      ID: e.enquiry_id,
+      FullName: e.full_name,
+      Email: e.email,
+      WhatsApp: e.whatsapp_number,
+      CurrentRole: e.current_role,
+      TargetRole: e.target_role,
+      Submitted: formatCreatedAt(e.created_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Discovery Call");
+    XLSX.writeFile(workbook, `discovery_call_enquiries_${Date.now()}.xlsx`);
+  };
+
+  const exportAiEngineerAcceleratorEnquiriesCSV = async () => {
+    const enquiries = await getAiEngineerAcceleratorEnquiries();
+
+    const headers = [
+      "ID",
+      "First Name",
+      "Last Name",
+      "Work Email",
+      "Phone",
+      "Current Role",
+      "Experience",
+      "Python Level",
+      "Program",
+      "Submitted",
+    ];
+
+    const rows = enquiries.map((e) => [
+      e.enquiry_id,
+      e.first_name,
+      e.last_name,
+      e.work_email,
+      e.phone_number,
+      e.current_role,
+      e.experience,
+      e.python_level,
+      e.program_name,
+      formatCreatedAt(e.created_at),
+    ]);
+
+    const csv =
+      "data:text/csv;charset=utf-8," +
+      headers.join(",") +
+      "\n" +
+      rows.map((row) => row.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csv));
+    link.setAttribute(
+      "download",
+      `ai_engineer_accelerator_enquiries_${Date.now()}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportAiEngineerAcceleratorEnquiriesExcel = async () => {
+    const enquiries = await getAiEngineerAcceleratorEnquiries();
+
+    const data = enquiries.map((e) => ({
+      ID: e.enquiry_id,
+      FirstName: e.first_name,
+      LastName: e.last_name,
+      WorkEmail: e.work_email,
+      Phone: e.phone_number,
+      CurrentRole: e.current_role,
+      Experience: e.experience,
+      PythonLevel: e.python_level,
+      Program: e.program_name,
+      Submitted: formatCreatedAt(e.created_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "AI Accelerator");
+    XLSX.writeFile(workbook, `ai_engineer_accelerator_enquiries_${Date.now()}.xlsx`);
+  };
+
   /* ================= USER STATUS ACTIONS ================= */
 
   const handleApprove = (user: User) => {
@@ -381,6 +512,8 @@ const handleTogglePremium = async (user: User, value: boolean) => {
     if (Array.isArray(res.jobs)) return res.jobs;
     if (Array.isArray(res.data?.users)) return res.data.users;
     if (Array.isArray(res.data?.jobs)) return res.data.jobs;
+    if (Array.isArray(res.enquiries)) return res.enquiries;
+    if (Array.isArray(res.data?.enquiries)) return res.data.enquiries;
     return [];
   };
 
@@ -543,6 +676,74 @@ const handleTogglePremium = async (user: User, value: boolean) => {
             </div>
 
             <JobTable />
+          </div>
+        )}
+
+        {view === "discovery-call-enquiries" && (
+          <div className="animate-fadeIn">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-white">Discovery Call Enquiries</h1>
+                <p className="text-sm text-slate-500">
+                  All discovery call form submissions
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={exportDiscoveryCallEnquiriesCSV}
+                  variant="secondary"
+                  icon={<Download size={16} />}
+                >
+                  Export CSV
+                </Button>
+
+                <Button
+                  onClick={exportDiscoveryCallEnquiriesExcel}
+                  variant="secondary"
+                  icon={<Download size={16} />}
+                >
+                  Export Excel
+                </Button>
+              </div>
+            </div>
+
+            <DiscoveryCallEnquiryTable />
+          </div>
+        )}
+
+        {view === "ai-engineer-accelerator-enquiries" && (
+          <div className="animate-fadeIn">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  AI Engineer Accelerator Enquiries
+                </h1>
+                <p className="text-sm text-slate-500">
+                  All AI Engineer Accelerator form submissions
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={exportAiEngineerAcceleratorEnquiriesCSV}
+                  variant="secondary"
+                  icon={<Download size={16} />}
+                >
+                  Export CSV
+                </Button>
+
+                <Button
+                  onClick={exportAiEngineerAcceleratorEnquiriesExcel}
+                  variant="secondary"
+                  icon={<Download size={16} />}
+                >
+                  Export Excel
+                </Button>
+              </div>
+            </div>
+
+            <AiEngineerAcceleratorEnquiryTable />
           </div>
         )}
       </Layout>
