@@ -38,6 +38,13 @@ import {
   setAdminSessionToken,
 } from "./api/authSession";
 import { formatCreatedAt } from "./lib/formatDate";
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 /* =====================================================
    LOGIN SCREEN
 ===================================================== */
@@ -542,6 +549,15 @@ const handleTogglePremium = async (user: User, value: boolean) => {
     if (!isAuthenticated) return;
     loadStats();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const pagePath = isAuthenticated ? `/admin/${view}` : "/admin/login";
+    window.gtag?.("config", "G-7VFQ334X5H", {
+      page_path: pagePath,
+      page_location: `${window.location.origin}${pagePath}`,
+      page_title: document.title,
+    });
+  }, [isAuthenticated, view]);
 
   useEffect(() => {
     const handleExpiredSession = () => {
