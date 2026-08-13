@@ -24,7 +24,7 @@ const getEnquiriesFromResponse = <T>(res: unknown): T[] => {
 };
 
 export const getDiscoveryCallEnquiries = async (): Promise<DiscoveryCallEnquiry[]> => {
-  const res = await axiosClient.get("/admin/enquiries/discovery-call");
+  const res = await axiosClient.get("/api/admin/enquiries/discovery-call");
   console.log("Discovery call enquiries response:", res);
   const enquiries = getEnquiriesFromResponse<DiscoveryCallEnquiry>(res);
   console.log("Discovery call enquiries normalized:", enquiries);
@@ -33,7 +33,7 @@ export const getDiscoveryCallEnquiries = async (): Promise<DiscoveryCallEnquiry[
 
 export const getAiEngineerAcceleratorEnquiries =
   async (): Promise<AiEngineerAcceleratorEnquiry[]> => {
-    const res = await axiosClient.get("/admin/enquiries/ai-engineer-accelerator");
+    const res = await axiosClient.get("/api/admin/enquiries/ai-engineer-accelerator");
     console.log("AI Engineer Accelerator enquiries response:", res);
     const enquiries = getEnquiriesFromResponse<AiEngineerAcceleratorEnquiry>(res);
     console.log("AI Engineer Accelerator enquiries normalized:", enquiries);
