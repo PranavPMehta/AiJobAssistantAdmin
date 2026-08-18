@@ -104,10 +104,24 @@ export interface AiEngineerAcceleratorEnquiry {
   updated_at?: string | number[] | null;
 }
 
+export interface CareerAuditBooking {
+  booking_id: string;
+  slot_date: string;
+  slot_time: string;
+  time_zone: string;
+  full_name: string;
+  email: string;
+  whatsapp_number: string;
+  resume_path?: string | null;
+  created_at?: string | number[] | null;
+  updated_at?: string | number[] | null;
+}
+
 export type ViewState =
   | 'dashboard'
   | 'requests'
   | 'users'
   | 'jobs'
   | 'discovery-call-enquiries'
-  | 'ai-engineer-accelerator-enquiries';
+  | 'ai-engineer-accelerator-enquiries'
+  | 'career-audit-bookings';

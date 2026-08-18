@@ -109,7 +109,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
 
   return (
     <>
-      <div className="flex flex-col gap-3 mb-4 rounded-lg border border-slate-800 bg-surface-card p-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 mb-5 rounded-xl border border-slate-800/80 bg-slate-900/80 p-4 shadow-lg shadow-black/10 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="text"
@@ -119,7 +119,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
               setSearchFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 w-full min-w-[220px] rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 outline-none focus:border-neon-green sm:w-72"
+            className="h-10 w-full min-w-[240px] rounded-lg border border-slate-700/80 bg-slate-950/80 px-3 text-sm text-slate-200 outline-none transition focus:border-neon-green focus:ring-2 focus:ring-neon-green/10 sm:w-80"
           />
 
           <input
@@ -129,7 +129,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
               setDateFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 rounded-lg border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 outline-none focus:border-neon-green"
+            className="h-10 rounded-lg border border-slate-700/80 bg-slate-950/80 px-3 text-sm text-slate-200 outline-none transition focus:border-neon-green focus:ring-2 focus:ring-neon-green/10"
           />
 
           <button
@@ -138,7 +138,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
               setDateFilter("");
               setCurrentPage(1);
             }}
-            className="h-10 rounded-lg border border-slate-700 bg-slate-800 px-4 text-sm text-slate-200 hover:bg-slate-700"
+            className="h-10 rounded-lg border border-slate-700 bg-slate-800/80 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-700"
           >
             Clear
           </button>
@@ -150,40 +150,42 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
         </div>
       </div>
 
-      <div className="bg-surface-card border border-slate-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/70 shadow-xl shadow-black/10">
         <div className="overflow-x-auto">
-          <table className="min-w-[960px] w-full divide-y divide-slate-800">
-            <thead className="bg-slate-900/50">
+          <table className="min-w-[1040px] w-full divide-y divide-slate-800/80">
+            <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur">
               <tr>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">SR</th>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">Name</th>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">Email</th>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">WhatsApp</th>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">Current Role</th>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">Target Role</th>
-                <th className="px-4 py-3 text-left text-xs text-slate-500 uppercase">Submitted</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">SR</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Name</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Email</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">WhatsApp</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Current Role</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Target Role</th>
+                <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Submitted</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-slate-800/70">
               {currentEnquiries.map((enquiry, index) => (
-                <tr key={enquiry.enquiry_id} className="hover:bg-slate-800/30">
-                  <td className="px-4 py-4 text-xs text-slate-500">
+                <tr key={enquiry.enquiry_id} className="transition-colors hover:bg-slate-800/40">
+                  <td className="px-5 py-4 text-xs font-medium text-slate-500">
                     {(indexOfFirst + index + 1).toString().padStart(2, "0")}
                   </td>
 
-                  <td className="px-4 py-4">
-                    <div className="text-sm font-medium text-white">{enquiry.full_name}</div>
-                    <div className="text-xs text-slate-500 truncate max-w-[180px]">
-                      {enquiry.enquiry_id}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neon-green/20 bg-neon-green/10 text-sm font-semibold text-neon-green">
+                        {(enquiry.full_name || "U").slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="text-sm font-semibold text-white">{enquiry.full_name}</div>
                     </div>
                   </td>
 
-                  <td className="px-4 py-4 text-sm text-slate-300">{enquiry.email}</td>
-                  <td className="px-4 py-4 text-sm text-slate-300">{enquiry.whatsapp_number}</td>
-                  <td className="px-4 py-4 text-sm text-slate-300">{enquiry.current_role}</td>
-                  <td className="px-4 py-4 text-sm text-slate-300">{enquiry.target_role}</td>
-                  <td className="px-4 py-4 text-sm text-slate-400">
+                  <td className="px-5 py-4 text-sm text-slate-300">{enquiry.email}</td>
+                  <td className="px-5 py-4 text-sm text-slate-300">{enquiry.whatsapp_number}</td>
+                  <td className="px-5 py-4 text-sm text-slate-300">{enquiry.current_role}</td>
+                  <td className="px-5 py-4 text-sm text-slate-300">{enquiry.target_role}</td>
+                  <td className="px-5 py-4 text-sm text-slate-400">
                     {formatCreatedAt(enquiry.created_at)}
                   </td>
                 </tr>

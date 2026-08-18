@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Briefcase, Phone, GraduationCap } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Briefcase, Phone, GraduationCap, CalendarCheck } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface LayoutProps {
@@ -19,10 +19,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
     { id: 'discovery-call-enquiries', label: 'Discovery Call Forms', icon: Phone },
     { id: 'ai-engineer-accelerator-enquiries', label: 'AI Accelerator Forms', icon: GraduationCap },
+    { id: 'career-audit-bookings', label: 'Career Audit Bookings', icon: CalendarCheck },
   ];
 
   return (
-    <div className="min-h-screen flex bg-surface-main text-slate-200 font-sans selection:bg-neon-green/30">
+    <div className="h-screen overflow-hidden flex bg-surface-main text-slate-200 font-sans selection:bg-neon-green/30">
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-surface-card border-b border-slate-800 flex items-center justify-between px-4 z-40 md:hidden">
         <div className="flex items-center gap-2">
@@ -36,11 +37,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-surface-card border-r border-slate-800 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen
+        fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-slate-950/95 border-r border-slate-800 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="h-full flex flex-col">
-          <div className="h-16 flex items-center px-6 border-b border-slate-800">
+          <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950">
             <ShieldCheck className="text-neon-green mr-2" />
             <span className="font-bold text-xl text-white tracking-tight">DRC<span className="text-neon-green">Admin</span></span>
           </div>
@@ -53,10 +54,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
                   onChangeView(item.id as ViewState);
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 group
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg border transition-all duration-200 group
                   ${currentView === item.id 
                     ? 'bg-neon-green/10 text-neon-green shadow-[0_0_10px_rgba(74,222,128,0.1)] border border-neon-green/20' 
-                    : 'text-slate-400 hover:bg-surface-hover hover:text-white'
+                    : 'border-transparent text-slate-400 hover:bg-slate-900 hover:text-white hover:border-slate-800'
                   }
                 `}
               >
@@ -87,8 +88,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
       )}
 
       {/* Main Content */}
-      <main className="flex-1 pt-16 md:pt-0 overflow-y-auto">
-        <div className="w-full p-4 md:p-6 xl:p-8 max-w-[1800px] mx-auto">
+      <main className="min-w-0 flex-1 pt-16 md:pt-0 overflow-y-auto overflow-x-hidden">
+        <div className="w-full min-w-0 p-4 md:p-6 xl:p-8">
           {children}
         </div>
       </main>

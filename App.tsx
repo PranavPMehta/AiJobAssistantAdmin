@@ -4,6 +4,7 @@ import { UserTable } from "./components/UserTable";
 import { JobTable } from "./components/JobTable";
 import { DiscoveryCallEnquiryTable } from "./components/DiscoveryCallEnquiryTable";
 import { AiEngineerAcceleratorEnquiryTable } from "./components/AiEngineerAcceleratorEnquiryTable";
+import { CareerAuditBookingTable } from "./components/CareerAuditBookingTable";
 import { Card, Button, Input } from "./components/UI";
 import { UserFormModal } from "./components/UserFormModal";
 import { JobFormModal } from "./components/Modals";
@@ -29,6 +30,7 @@ import { adminLogin as loginAdmin } from "./api/adminApi";
 import {
   getDiscoveryCallEnquiries,
   getAiEngineerAcceleratorEnquiries,
+  getCareerAuditBookings,
 } from "./api/adminEnquiryApi";
 import axiosClient from "./api/axiosClient";
 import {
@@ -418,6 +420,68 @@ const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     XLSX.writeFile(workbook, `ai_engineer_accelerator_enquiries_${Date.now()}.xlsx`);
   };
 
+  const exportCareerAuditBookingsCSV = async () => {
+    const bookings = await getCareerAuditBookings();
+
+    const headers = [
+      "ID",
+      "Full Name",
+      "Email",
+      "WhatsApp",
+      "Slot Date",
+      "Slot Time",
+      "Timezone",
+      "Resume",
+      "Booked At",
+    ];
+
+    const rows = bookings.map((b) => [
+      b.booking_id,
+      b.full_name,
+      b.email,
+      b.whatsapp_number,
+      b.slot_date,
+      b.slot_time,
+      b.time_zone,
+      b.resume_path || "",
+      formatCreatedAt(b.created_at),
+    ]);
+
+    const csv =
+      "data:text/csv;charset=utf-8," +
+      headers.join(",") +
+      "\n" +
+      rows.map((row) => row.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csv));
+    link.setAttribute("download", `career_audit_bookings_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportCareerAuditBookingsExcel = async () => {
+    const bookings = await getCareerAuditBookings();
+
+    const data = bookings.map((b) => ({
+      ID: b.booking_id,
+      FullName: b.full_name,
+      Email: b.email,
+      WhatsApp: b.whatsapp_number,
+      SlotDate: b.slot_date,
+      SlotTime: b.slot_time,
+      Timezone: b.time_zone,
+      Resume: b.resume_path || "",
+      BookedAt: formatCreatedAt(b.created_at),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Career Audit");
+    XLSX.writeFile(workbook, `career_audit_bookings_${Date.now()}.xlsx`);
+  };
+
   /* ================= USER STATUS ACTIONS ================= */
 
   const handleApprove = (user: User) => {
@@ -699,9 +763,9 @@ const handleTogglePremium = async (user: User, value: boolean) => {
           <div className="animate-fadeIn">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-white">Discovery Call Enquiries</h1>
+                <h1 className="text-2xl font-bold text-white">Discovery Call Forms</h1>
                 <p className="text-sm text-slate-500">
-                  All discovery call form submissions
+                  All discovery call form submissions and lead details
                 </p>
               </div>
 
@@ -733,10 +797,10 @@ const handleTogglePremium = async (user: User, value: boolean) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  AI Engineer Accelerator Enquiries
+                  AI Accelerator Forms
                 </h1>
                 <p className="text-sm text-slate-500">
-                  All AI Engineer Accelerator form submissions
+                  All AI Engineer Accelerator form submissions and lead details
                 </p>
               </div>
 
@@ -760,6 +824,41 @@ const handleTogglePremium = async (user: User, value: boolean) => {
             </div>
 
             <AiEngineerAcceleratorEnquiryTable />
+          </div>
+        )}
+
+        {view === "career-audit-bookings" && (
+          <div className="animate-fadeIn">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  Career Audit Bookings
+                </h1>
+                <p className="text-sm text-slate-500">
+                  All booked career audit calls and uploaded resumes
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={exportCareerAuditBookingsCSV}
+                  variant="secondary"
+                  icon={<Download size={16} />}
+                >
+                  Export CSV
+                </Button>
+
+                <Button
+                  onClick={exportCareerAuditBookingsExcel}
+                  variant="secondary"
+                  icon={<Download size={16} />}
+                >
+                  Export Excel
+                </Button>
+              </div>
+            </div>
+
+            <CareerAuditBookingTable />
           </div>
         )}
       </Layout>
