@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react";
+import { ChevronLeft, ChevronRight, GraduationCap, Trash2 } from "lucide-react";
 
-import { getAiEngineerAcceleratorEnquiries } from "../api/adminEnquiryApi";
+import {
+  deleteAiEngineerAcceleratorEnquiry,
+  getAiEngineerAcceleratorEnquiries,
+} from "../api/adminEnquiryApi";
 import { formatCreatedAt, matchesDateFilter } from "../lib/formatDate";
 import { AiEngineerAcceleratorEnquiry } from "../types";
 
@@ -18,6 +21,7 @@ export const AiEngineerAcceleratorEnquiryTable: React.FC<
   const [currentPage, setCurrentPage] = useState(1);
   const [searchFilter, setSearchFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const enquiriesPerPage = pageSize;
   const visiblePages = 7;
@@ -87,6 +91,28 @@ export const AiEngineerAcceleratorEnquiryTable: React.FC<
     }
   }, [currentPage, totalPages]);
 
+  const handleDelete = async (enquiry: AiEngineerAcceleratorEnquiry) => {
+    const fullName = `${enquiry.first_name} ${enquiry.last_name}`.trim();
+    const confirmed = window.confirm(
+      `Hard delete AI Accelerator form for ${fullName}? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(enquiry.enquiry_id);
+      await deleteAiEngineerAcceleratorEnquiry(enquiry.enquiry_id);
+      setEnquiries((prev) =>
+        prev.filter((item) => item.enquiry_id !== enquiry.enquiry_id)
+      );
+    } catch (err) {
+      console.error("Failed to delete AI Engineer Accelerator enquiry:", err);
+      alert("Failed to delete AI Accelerator form. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-20 text-slate-400">
@@ -154,7 +180,7 @@ export const AiEngineerAcceleratorEnquiryTable: React.FC<
 
       <div className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/70 shadow-xl shadow-black/10">
         <div className="overflow-x-auto">
-          <table className="min-w-[1180px] w-full divide-y divide-slate-800/80">
+          <table className="min-w-[1260px] w-full divide-y divide-slate-800/80">
             <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur">
               <tr>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">SR</th>
@@ -166,6 +192,7 @@ export const AiEngineerAcceleratorEnquiryTable: React.FC<
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Python Level</th>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Program</th>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Submitted</th>
+                <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Actions</th>
               </tr>
             </thead>
 
@@ -195,6 +222,18 @@ export const AiEngineerAcceleratorEnquiryTable: React.FC<
                   <td className="px-5 py-4 text-sm text-slate-300">{enquiry.program_name}</td>
                   <td className="px-5 py-4 text-sm text-slate-400">
                     {formatCreatedAt(enquiry.created_at)}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(enquiry)}
+                      disabled={deletingId === enquiry.enquiry_id}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 transition hover:border-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Hard delete"
+                      aria-label={`Delete AI Accelerator form for ${enquiry.first_name} ${enquiry.last_name}`}
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </td>
                 </tr>
               ))}

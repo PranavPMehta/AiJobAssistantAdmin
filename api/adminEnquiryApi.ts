@@ -51,6 +51,10 @@ export const getDiscoveryCallEnquiries = async (): Promise<DiscoveryCallEnquiry[
   return enquiries;
 };
 
+export const deleteDiscoveryCallEnquiry = async (enquiryId: string): Promise<void> => {
+  await axiosClient.delete(`/api/admin/enquiries/discovery-call/${enquiryId}`);
+};
+
 export const getAiEngineerAcceleratorEnquiries =
   async (): Promise<AiEngineerAcceleratorEnquiry[]> => {
     const res = await axiosClient.get("/api/admin/enquiries/ai-engineer-accelerator");
@@ -60,12 +64,22 @@ export const getAiEngineerAcceleratorEnquiries =
     return enquiries;
   };
 
+export const deleteAiEngineerAcceleratorEnquiry = async (
+  enquiryId: string
+): Promise<void> => {
+  await axiosClient.delete(`/api/admin/enquiries/ai-engineer-accelerator/${enquiryId}`);
+};
+
 export const getCareerAuditBookings = async (): Promise<CareerAuditBooking[]> => {
   const res = await axiosClient.get("/api/admin/bookings/career-audit");
   console.log("Career audit bookings response:", res);
   const bookings = getBookingsFromResponse<CareerAuditBooking>(res);
   console.log("Career audit bookings normalized:", bookings);
   return bookings;
+};
+
+export const deleteCareerAuditBooking = async (bookingId: string): Promise<void> => {
+  await axiosClient.delete(`/api/admin/bookings/career-audit/${bookingId}`);
 };
 
 export const getCareerAuditResumeUrl = (

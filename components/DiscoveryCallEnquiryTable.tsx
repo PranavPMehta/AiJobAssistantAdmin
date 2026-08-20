@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight, Phone, Trash2 } from "lucide-react";
 
-import { getDiscoveryCallEnquiries } from "../api/adminEnquiryApi";
+import {
+  deleteDiscoveryCallEnquiry,
+  getDiscoveryCallEnquiries,
+} from "../api/adminEnquiryApi";
 import { formatCreatedAt, matchesDateFilter } from "../lib/formatDate";
 import { DiscoveryCallEnquiry } from "../types";
 
@@ -19,6 +22,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
   const [currentPage, setCurrentPage] = useState(1);
   const [searchFilter, setSearchFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const enquiriesPerPage = pageSize;
   const visiblePages = 7;
@@ -84,6 +88,27 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
+
+  const handleDelete = async (enquiry: DiscoveryCallEnquiry) => {
+    const confirmed = window.confirm(
+      `Hard delete discovery call form for ${enquiry.full_name}? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(enquiry.enquiry_id);
+      await deleteDiscoveryCallEnquiry(enquiry.enquiry_id);
+      setEnquiries((prev) =>
+        prev.filter((item) => item.enquiry_id !== enquiry.enquiry_id)
+      );
+    } catch (err) {
+      console.error("Failed to delete discovery call enquiry:", err);
+      alert("Failed to delete discovery call form. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -152,7 +177,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
 
       <div className="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/70 shadow-xl shadow-black/10">
         <div className="overflow-x-auto">
-          <table className="min-w-[1040px] w-full divide-y divide-slate-800/80">
+          <table className="min-w-[1120px] w-full divide-y divide-slate-800/80">
             <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur">
               <tr>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">SR</th>
@@ -162,6 +187,7 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Current Role</th>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Target Role</th>
                 <th className="px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Submitted</th>
+                <th className="px-5 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Actions</th>
               </tr>
             </thead>
 
@@ -187,6 +213,18 @@ export const DiscoveryCallEnquiryTable: React.FC<DiscoveryCallEnquiryTableProps>
                   <td className="px-5 py-4 text-sm text-slate-300">{enquiry.target_role}</td>
                   <td className="px-5 py-4 text-sm text-slate-400">
                     {formatCreatedAt(enquiry.created_at)}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(enquiry)}
+                      disabled={deletingId === enquiry.enquiry_id}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-slate-300 transition hover:border-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Hard delete"
+                      aria-label={`Delete discovery call form for ${enquiry.full_name}`}
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </td>
                 </tr>
               ))}
