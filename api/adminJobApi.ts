@@ -7,6 +7,19 @@ import axiosClient from "./axiosClient";
  */
 
 const mapJobToApi = (data: any) => {
+  const connections = Array.isArray(data.connections)
+    ? data.connections
+        .map((conn: any) => ({
+          name: conn?.name || "",
+          title: conn?.title || "",
+          emailOrLinkedIn: conn?.emailOrLinkedIn || conn?.contact || conn?.linkedin || "",
+          email: conn?.email || "",
+          mobileNumber: conn?.mobileNumber || conn?.mobile || conn?.mobilenumber || "",
+        }))
+        .filter((conn: any) =>
+          conn.name || conn.title || conn.emailOrLinkedIn || conn.email || conn.mobileNumber
+        )
+    : [];
 
   const payload = {
     job_title: data.jobTitle,
@@ -20,7 +33,7 @@ const mapJobToApi = (data: any) => {
     status: data.status || "Saved",
     insights: data.description || null,
     remarks: data.remarks || null,
-    connections: data.connections || [],
+    connections,
     createdAt: data.created_at || null
   };
 
@@ -46,6 +59,11 @@ export const getAllJobs = async () => {
   console.log("📥 JOBS RESPONSE:", res);
 
   return res;
+};
+
+export const getJobSavedUsers = async () => {
+  const res = await axiosClient.get("/admin/jobs/saved-users");
+  return res?.savedUsersByJob || res?.data?.savedUsersByJob || {};
 };
 
 export const getJobsFromResponse = (res: any) => {

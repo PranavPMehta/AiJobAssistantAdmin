@@ -4,6 +4,8 @@ export interface Connection {
   name: string;
   title?: string;
   emailOrLinkedIn?: string | null;
+  email?: string | null;
+  mobileNumber?: string | null;
 }
 
 export interface Job {
@@ -120,5 +122,15 @@ export interface AdminJobRow {
 
   remarks: string;
 
+  savedBy?: Array<{
+    userJobId?: string;
+    userId?: string;
+    name?: string;
+    email?: string;
+    status?: string;
+    savedAt?: string | null;
+  }>;
+
   createdAt?: string | null; // ✅ ADD THIS
 }
+

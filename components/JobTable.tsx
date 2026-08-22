@@ -12,7 +12,7 @@ import {
 
 import { AdminJobRow, JobStatus } from "../api/types";
 import { mapJobsFromApi } from "../api/mappers/jobMapper";
-import { getAllJobs, getJobsFromResponse, updateJob } from "../api/adminJobApi";
+import { getAllJobs, getJobSavedUsers, getJobsFromResponse, updateJob } from "../api/adminJobApi";
 
 import { JobFormModal } from "./Modals";
 
@@ -68,6 +68,12 @@ export const JobTable: React.FC<JobTableProps> = ({
       year: "numeric",
     });
   };
+
+  const attachSavedUsers = (rows: AdminJobRow[], savedUsersByJob: Record<string, any[]> = {}) =>
+    rows.map((job) => ({
+      ...job,
+      savedBy: savedUsersByJob[job.id] || [],
+    }));
 
   /* ================= FILTER ================= */
 
@@ -132,8 +138,14 @@ export const JobTable: React.FC<JobTableProps> = ({
     try {
       setLoading(true);
 
-      const res: any = await getAllJobs();
-      const mappedJobs = mapJobsFromApi(getJobsFromResponse(res));
+      const [res, savedUsersByJob]: any = await Promise.all([
+        getAllJobs(),
+        getJobSavedUsers().catch(() => ({})),
+      ]);
+      const mappedJobs = attachSavedUsers(
+        mapJobsFromApi(getJobsFromResponse(res)),
+        savedUsersByJob
+      );
 
       setJobs(mappedJobs);
 
@@ -151,9 +163,19 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   useEffect(() => {
     if (jobsProp) {
-      setJobs(mapJobsFromApi(jobsProp));
-      setLoading(false);
-      return;
+      let cancelled = false;
+      const hydrateJobs = async () => {
+        const savedUsersByJob = await getJobSavedUsers().catch(() => ({}));
+        if (!cancelled) {
+          setJobs(attachSavedUsers(mapJobsFromApi(jobsProp), savedUsersByJob));
+          setLoading(false);
+        }
+      };
+
+      hydrateJobs();
+      return () => {
+        cancelled = true;
+      };
     }
 
     fetchJobs();
@@ -333,7 +355,7 @@ export const JobTable: React.FC<JobTableProps> = ({
 
         <div className="overflow-x-auto">
 
-          <table className="min-w-[1180px] w-full divide-y divide-slate-800 table-fixed">
+          <table className="min-w-[1380px] w-full divide-y divide-slate-800 table-fixed">
 
             <thead className="bg-slate-900/50">
 
@@ -344,6 +366,7 @@ export const JobTable: React.FC<JobTableProps> = ({
                 <th className="w-40 px-4 py-3 text-left text-xs text-slate-500 uppercase">Company</th>
                 <th className="w-32 px-4 py-3 text-left text-xs text-slate-500 uppercase">Location</th>
                 <th className="w-28 px-4 py-3 text-left text-xs text-slate-500 uppercase">Created</th>
+                <th className="w-56 px-4 py-3 text-left text-xs text-slate-500 uppercase">Saved By</th>
                 <th className="w-36 px-4 py-3 text-left text-xs text-slate-500 uppercase">Skills</th>
                 <th className="w-20 px-4 py-3 text-left text-xs text-slate-500 uppercase">Website</th>
                 <th className="w-36 px-4 py-3 text-left text-xs text-slate-500 uppercase">Status</th>
@@ -387,6 +410,35 @@ export const JobTable: React.FC<JobTableProps> = ({
                 <td className="px-4 py-4 text-sm text-slate-400">
   {formatCreatedAt(job.createdAt)}
 </td>
+
+                  <td className="px-4 py-4 align-top">
+                    {job.savedBy && job.savedBy.length > 0 ? (
+                      <div className="max-h-24 space-y-2 overflow-y-auto pr-1">
+                        {job.savedBy.map((savedUser, savedIndex) => (
+                          <div key={`${savedUser.userJobId || savedUser.userId || savedIndex}`} className="rounded-md border border-slate-800 bg-slate-950/70 p-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="line-clamp-1 text-xs font-semibold text-white">
+                                {savedUser.name || savedUser.email || "User"}
+                              </span>
+                              {savedUser.status && (
+                                <span className="shrink-0 rounded border border-neon-green/20 bg-neon-green/10 px-1.5 py-0.5 text-[9px] uppercase text-neon-green">
+                                  {savedUser.status}
+                                </span>
+                              )}
+                            </div>
+                            {savedUser.email && (
+                              <div className="line-clamp-1 text-[10px] text-slate-500">{savedUser.email}</div>
+                            )}
+                            <div className="mt-1 text-[10px] text-slate-400">
+                              Saved {formatCreatedAt(savedUser.savedAt)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-600">Not saved yet</span>
+                    )}
+                  </td>
 
                   <td className="px-4 py-4">
                     <div className="flex flex-wrap gap-1">

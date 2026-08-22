@@ -18,6 +18,23 @@ const safeParse = (value: any) => {
   }
 };
 
+const normalizeConnections = (value: any) => {
+  const connections = safeParse(value);
+  if (!Array.isArray(connections)) return [];
+
+  return connections
+    .map((conn: any) => ({
+      name: conn?.name ?? "",
+      title: conn?.title ?? conn?.position ?? "",
+      emailOrLinkedIn: conn?.emailOrLinkedIn ?? conn?.contact ?? conn?.linkedin ?? conn?.linkedIn ?? conn?.url ?? "",
+      email: conn?.email ?? conn?.email_address ?? conn?.email_id ?? "",
+      mobileNumber: conn?.mobileNumber ?? conn?.mobile ?? conn?.mobile_number ?? conn?.mobilenumber ?? conn?.phone ?? "",
+    }))
+    .filter((conn: any) =>
+      conn.name || conn.title || conn.emailOrLinkedIn || conn.email || conn.mobileNumber
+    );
+};
+
 /**
  * Backend Job → Frontend AdminJobRow
  */
@@ -43,7 +60,7 @@ export const mapJobFromApi = (j: any): AdminJobRow => {
 
     status: (j.status || "SAVED") as JobStatus,
 
-    connections: safeParse(j.connections),
+    connections: normalizeConnections(j.connections),
 
     proofs: j.proof_path ? [j.proof_path] : [],
 

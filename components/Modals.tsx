@@ -8,7 +8,10 @@ import { createJob, updateJob } from "../api/adminJobApi";
 interface Connection {
   name: string;
   title: string;
-  contact: string;
+  emailOrLinkedIn: string;
+  email: string;
+  mobileNumber: string;
+  contact?: string;
 }
 
 interface Props {
@@ -67,7 +70,13 @@ export const JobFormModal: React.FC<Props> = ({
         status: job.status || JobStatus.SAVED,
         description: job.description || "",
         remarks: job.remarks || "",
-        connections: job.connections || [],
+        connections: (job.connections || []).map((conn: any) => ({
+          name: conn.name || "",
+          title: conn.title || "",
+          emailOrLinkedIn: conn.emailOrLinkedIn || conn.contact || conn.linkedin || conn.linkedIn || conn.url || "",
+          email: conn.email || conn.email_address || conn.email_id || "",
+          mobileNumber: conn.mobileNumber || conn.mobile || conn.mobile_number || conn.mobilenumber || conn.phone || "",
+        })),
         resume: job.resume || "",
         proofs: job.proofs || []
       });
@@ -135,7 +144,7 @@ export const JobFormModal: React.FC<Props> = ({
         ...form,
         connections: [
           ...form.connections,
-          { name: "", title: "", contact: "" }
+          { name: "", title: "", emailOrLinkedIn: "", email: "", mobileNumber: "" }
         ]
       });
 
@@ -246,7 +255,7 @@ export const JobFormModal: React.FC<Props> = ({
 
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 p-4">
 
-      <div className="bg-surface-card border border-slate-700 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface-card border border-slate-700 rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
 
         {/* HEADER */}
 
@@ -421,7 +430,7 @@ export const JobFormModal: React.FC<Props> = ({
                     className="grid grid-cols-12 gap-2 bg-surface-main p-2 rounded-lg border border-slate-800"
                   >
 
-                    <div className="col-span-3">
+                    <div className="col-span-12 md:col-span-3">
                       <Input
                         placeholder="Name"
                         value={conn.name || ""}
@@ -431,9 +440,9 @@ export const JobFormModal: React.FC<Props> = ({
                       />
                     </div>
 
-                    <div className="col-span-3">
+                    <div className="col-span-12 md:col-span-3">
                       <Input
-                        placeholder="Title"
+                        placeholder="Title / Position"
                         value={conn.title || ""}
                         onChange={(e) =>
                           updateConnection(i, "title", e.target.value)
@@ -441,17 +450,37 @@ export const JobFormModal: React.FC<Props> = ({
                       />
                     </div>
 
-                    <div className="col-span-5">
+                    <div className="col-span-12 md:col-span-2">
                       <Input
-                        placeholder="Email / LinkedIn"
-                        value={conn.contact || ""}
+                        placeholder="LinkedIn URL"
+                        value={conn.emailOrLinkedIn || conn.contact || ""}
                         onChange={(e) =>
-                          updateConnection(i, "contact", e.target.value)
+                          updateConnection(i, "emailOrLinkedIn", e.target.value)
                         }
                       />
                     </div>
 
-                    <div className="col-span-1 flex items-center justify-center">
+                    <div className="col-span-12 md:col-span-2">
+                      <Input
+                        placeholder="Email"
+                        value={conn.email || ""}
+                        onChange={(e) =>
+                          updateConnection(i, "email", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="col-span-10 md:col-span-1">
+                      <Input
+                        placeholder="Mobile Number"
+                        value={conn.mobileNumber || ""}
+                        onChange={(e) =>
+                          updateConnection(i, "mobileNumber", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1 flex items-center justify-center">
                       <button
                         type="button"
                         onClick={() => removeConnection(i)}
