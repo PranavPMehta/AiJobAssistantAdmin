@@ -18,6 +18,25 @@ const safeParse = (value: any) => {
   }
 };
 
+const decodeHtmlEntities = (value: string) => {
+  if (typeof document === "undefined") return value;
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = value;
+  return textarea.value;
+};
+
+const htmlToText = (value: any) =>
+  decodeHtmlEntities(value ? String(value) : "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "- ")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+
 const normalizeConnections = (value: any) => {
   const connections = safeParse(value);
   if (!Array.isArray(connections)) return [];
@@ -56,7 +75,7 @@ export const mapJobFromApi = (j: any): AdminJobRow => {
         : safeParse(j.key_skills),
 
     applicationUrl: j.application_url ?? j.applicationUrl ?? j.website ?? "",
-    description: j.insights ?? j.description ?? "",
+    description: htmlToText(j.insights ?? j.description ?? ""),
 
     status: (j.status || "SAVED") as JobStatus,
 

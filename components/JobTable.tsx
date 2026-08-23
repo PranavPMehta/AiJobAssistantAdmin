@@ -8,6 +8,7 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 
 import { AdminJobRow, JobStatus } from "../api/types";
@@ -23,6 +24,8 @@ interface JobTableProps {
   onStatusChange?: (job: AdminJobRow, newStatus: JobStatus) => void;
 }
 
+type SavedUser = NonNullable<AdminJobRow["savedBy"]>[number];
+
 export const JobTable: React.FC<JobTableProps> = ({
   jobs: jobsProp,
   pageSize = 20,
@@ -37,6 +40,7 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   const [selectedJob, setSelectedJob] = useState<AdminJobRow | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [savedUsersJob, setSavedUsersJob] = useState<AdminJobRow | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -200,24 +204,6 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   };
 
-  const handleUpdate = async (data: Partial<AdminJobRow>) => {
-
-    if (!selectedJob) return;
-
-    try {
-
-      await updateJob(selectedJob.id, data);
-
-      setModalOpen(false);
-      fetchJobs();
-
-    } catch (err) {
-
-      console.error("Update failed", err);
-
-    }
-  };
-
   const handleStatusChange = async (job: AdminJobRow, newStatus: JobStatus) => {
     setJobs((prev) =>
       prev.map((item) =>
@@ -263,6 +249,38 @@ export const JobTable: React.FC<JobTableProps> = ({
         return "text-slate-400 bg-slate-400/10 border-slate-400/20";
 
     }
+  };
+
+  const SavedByCell = ({ job }: { job: AdminJobRow }) => {
+    const savedBy = job.savedBy || [];
+    const firstUser = savedBy[0];
+
+    if (!savedBy.length) {
+      return <span className="text-xs text-slate-600">Not saved yet</span>;
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => setSavedUsersJob(job)}
+        className="w-full rounded-md border border-neon-green/20 bg-neon-green/10 p-2 text-left transition hover:border-neon-green/50 hover:bg-neon-green/15"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="line-clamp-1 text-xs font-semibold text-white">
+            {firstUser?.name || firstUser?.email || "User"}
+          </span>
+          <span className="shrink-0 rounded border border-neon-green/20 bg-neon-green/10 px-1.5 py-0.5 text-[9px] uppercase text-neon-green">
+            {savedBy.length} saved
+          </span>
+        </div>
+        {firstUser?.email && (
+          <div className="line-clamp-1 text-[10px] text-slate-500">{firstUser.email}</div>
+        )}
+        <div className="mt-1 text-[10px] text-slate-400">
+          {savedBy.length > 1 ? `+${savedBy.length - 1} more users` : `Saved ${formatCreatedAt(firstUser?.savedAt)}`}
+        </div>
+      </button>
+    );
   };
 
   /* ================= LOADING ================= */
@@ -407,37 +425,12 @@ export const JobTable: React.FC<JobTableProps> = ({
                     <span className="line-clamp-2">{job.location}</span>
                   </td>
 
-                <td className="px-4 py-4 text-sm text-slate-400">
-  {formatCreatedAt(job.createdAt)}
-</td>
+                  <td className="px-4 py-4 text-sm text-slate-400">
+                    {formatCreatedAt(job.createdAt)}
+                  </td>
 
                   <td className="px-4 py-4 align-top">
-                    {job.savedBy && job.savedBy.length > 0 ? (
-                      <div className="max-h-24 space-y-2 overflow-y-auto pr-1">
-                        {job.savedBy.map((savedUser, savedIndex) => (
-                          <div key={`${savedUser.userJobId || savedUser.userId || savedIndex}`} className="rounded-md border border-slate-800 bg-slate-950/70 p-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="line-clamp-1 text-xs font-semibold text-white">
-                                {savedUser.name || savedUser.email || "User"}
-                              </span>
-                              {savedUser.status && (
-                                <span className="shrink-0 rounded border border-neon-green/20 bg-neon-green/10 px-1.5 py-0.5 text-[9px] uppercase text-neon-green">
-                                  {savedUser.status}
-                                </span>
-                              )}
-                            </div>
-                            {savedUser.email && (
-                              <div className="line-clamp-1 text-[10px] text-slate-500">{savedUser.email}</div>
-                            )}
-                            <div className="mt-1 text-[10px] text-slate-400">
-                              Saved {formatCreatedAt(savedUser.savedAt)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-slate-600">Not saved yet</span>
-                    )}
+                    <SavedByCell job={job} />
                   </td>
 
                   <td className="px-4 py-4">
@@ -604,6 +597,85 @@ export const JobTable: React.FC<JobTableProps> = ({
         onSuccess={fetchJobs}
       />
 
+      <SavedUsersModal
+        job={savedUsersJob}
+        onClose={() => setSavedUsersJob(null)}
+        formatCreatedAt={formatCreatedAt}
+      />
+
     </>
+  );
+};
+
+const SavedUsersModal = ({
+  job,
+  onClose,
+  formatCreatedAt,
+}: {
+  job: AdminJobRow | null;
+  onClose: () => void;
+  formatCreatedAt: (createdAt: any) => string;
+}) => {
+  if (!job) return null;
+
+  const savedUsers = job.savedBy || [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-xl border border-slate-700 bg-surface-card shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Saved By Users</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              {job.jobTitle} · {job.company}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+            aria-label="Close saved users popup"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="max-h-[65vh] overflow-y-auto p-5">
+          {savedUsers.length > 0 ? (
+            <div className="space-y-3">
+              {savedUsers.map((savedUser: SavedUser, savedIndex: number) => (
+                <div
+                  key={`${savedUser.userJobId || savedUser.userId || savedIndex}`}
+                  className="rounded-lg border border-slate-800 bg-slate-950/70 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-1 text-sm font-semibold text-white">
+                        {savedUser.name || savedUser.email || "User"}
+                      </p>
+                      <p className="mt-1 break-all text-xs text-slate-400">
+                        {savedUser.email || "No email available"}
+                      </p>
+                    </div>
+                    {savedUser.status && (
+                      <span className="shrink-0 rounded border border-neon-green/20 bg-neon-green/10 px-2 py-1 text-[10px] uppercase text-neon-green">
+                        {savedUser.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 text-xs text-slate-500">
+                    Saved {formatCreatedAt(savedUser.savedAt)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-6 text-center text-sm text-slate-500">
+              No users have saved this job yet.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
