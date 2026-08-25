@@ -37,6 +37,7 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   const [jobs, setJobs] = useState<AdminJobRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalRows, setTotalRows] = useState(0);
 
   const [selectedJob, setSelectedJob] = useState<AdminJobRow | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -49,6 +50,7 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   const jobsPerPage = pageSize;
   const visiblePages = 7;
+  const useServerPagination = !jobsProp;
 
   const formatCreatedAt = (createdAt: any) => {
     if (!createdAt) return "-";
@@ -81,7 +83,7 @@ export const JobTable: React.FC<JobTableProps> = ({
 
   /* ================= FILTER ================= */
 
-  const filteredJobs = jobs.filter((job) => {
+  const filteredJobs = useServerPagination ? jobs : jobs.filter((job) => {
 
   const titleMatch = titleFilter
     ? job.jobTitle?.toLowerCase().includes(titleFilter.toLowerCase())
@@ -120,9 +122,10 @@ export const JobTable: React.FC<JobTableProps> = ({
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
 
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
+  const currentJobs = useServerPagination ? jobs : filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  const totalItems = useServerPagination ? totalRows : filteredJobs.length;
+  const totalPages = Math.ceil(totalItems / jobsPerPage);
   const pageWindowStart = Math.max(
     1,
     Math.min(
@@ -142,16 +145,18 @@ export const JobTable: React.FC<JobTableProps> = ({
     try {
       setLoading(true);
 
-      const [res, savedUsersByJob]: any = await Promise.all([
-        getAllJobs(),
-        getJobSavedUsers().catch(() => ({})),
-      ]);
-      const mappedJobs = attachSavedUsers(
-        mapJobsFromApi(getJobsFromResponse(res)),
-        savedUsersByJob
-      );
+      const res: any = await getAllJobs({
+        page: currentPage - 1,
+        size: jobsPerPage,
+        title: titleFilter,
+        date: dateFilter,
+      });
+      const rows = mapJobsFromApi(getJobsFromResponse(res));
+      const savedUsersByJob = await getJobSavedUsers(rows.map((job) => job.id)).catch(() => ({}));
+      const mappedJobs = attachSavedUsers(rows, savedUsersByJob);
 
       setJobs(mappedJobs);
+      setTotalRows(Number(res?.totalElements ?? mappedJobs.length));
 
     } catch (err) {
 
@@ -169,9 +174,11 @@ export const JobTable: React.FC<JobTableProps> = ({
     if (jobsProp) {
       let cancelled = false;
       const hydrateJobs = async () => {
-        const savedUsersByJob = await getJobSavedUsers().catch(() => ({}));
+        const mappedRows = mapJobsFromApi(jobsProp);
+        const savedUsersByJob = await getJobSavedUsers(mappedRows.map((job) => job.id)).catch(() => ({}));
         if (!cancelled) {
-          setJobs(attachSavedUsers(mapJobsFromApi(jobsProp), savedUsersByJob));
+          setJobs(attachSavedUsers(mappedRows, savedUsersByJob));
+          setTotalRows(mappedRows.length);
           setLoading(false);
         }
       };
@@ -183,7 +190,7 @@ export const JobTable: React.FC<JobTableProps> = ({
     }
 
     fetchJobs();
-  }, [jobsProp]);
+  }, [jobsProp, currentPage, jobsPerPage, titleFilter, dateFilter]);
 
   useEffect(() => {
     if (totalPages > 0 && currentPage > totalPages) {
@@ -360,8 +367,8 @@ export const JobTable: React.FC<JobTableProps> = ({
         </div>
 
         <div className="text-sm text-slate-400">
-          Showing {filteredJobs.length === 0 ? 0 : indexOfFirstJob + 1}-
-          {Math.min(indexOfLastJob, filteredJobs.length)} of {filteredJobs.length}
+          Showing {totalItems === 0 ? 0 : indexOfFirstJob + 1}-
+          {Math.min(indexOfLastJob, totalItems)} of {totalItems}
         </div>
 
       </div>

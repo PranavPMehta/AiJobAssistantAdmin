@@ -1,10 +1,11 @@
 import axiosClient from "./axiosClient";
 
-/**
- * =========================
- * HELPER: FRONTEND → BACKEND MAPPER
- * =========================
- */
+type JobQuery = {
+  page?: number;
+  size?: number;
+  title?: string;
+  date?: string;
+};
 
 const mapJobToApi = (data: any) => {
   const connections = Array.isArray(data.connections)
@@ -21,7 +22,7 @@ const mapJobToApi = (data: any) => {
         )
     : [];
 
-  const payload = {
+  return {
     job_title: data.jobTitle,
     company: data.company,
     location: data.location,
@@ -34,35 +35,29 @@ const mapJobToApi = (data: any) => {
     insights: data.description || null,
     remarks: data.remarks || null,
     connections,
-    createdAt: data.created_at || null
+    createdAt: data.created_at || null,
   };
-
-  console.log("📡 FINAL PAYLOAD SENT TO BACKEND:", payload);
-
-  return payload;
 };
 
+export const getAllJobs = async (query: JobQuery = {}) => {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page ?? 0));
+  params.set("size", String(query.size ?? 50));
+  if (query.title?.trim()) params.set("title", query.title.trim());
+  if (query.date) params.set("date", query.date);
 
-/**
- * =========================
- * ADMIN JOB APIs
- * =========================
- */
-
-// ✅ Get All Jobs
-export const getAllJobs = async () => {
-
-  console.log("📡 FETCHING ALL JOBS");
-
-  const res = await axiosClient.get("/admin/jobs");
-
-  console.log("📥 JOBS RESPONSE:", res);
-
-  return res;
+  return axiosClient.get(`/admin/jobs?${params.toString()}`);
 };
 
-export const getJobSavedUsers = async () => {
-  const res = await axiosClient.get("/admin/jobs/saved-users");
+export const getJobStats = async () => {
+  return axiosClient.get("/admin/jobs/stats");
+};
+
+export const getJobSavedUsers = async (jobIds: string[] = []) => {
+  const params = new URLSearchParams();
+  if (jobIds.length) params.set("jobIds", jobIds.join(","));
+  const query = params.toString();
+  const res = await axiosClient.get(`/admin/jobs/saved-users${query ? `?${query}` : ""}`);
   return res?.savedUsersByJob || res?.data?.savedUsersByJob || {};
 };
 
@@ -74,47 +69,16 @@ export const getJobsFromResponse = (res: any) => {
   return [];
 };
 
-
-// ✅ Create Job
 export const createJob = async (data: any) => {
-
-  console.log("📦 RAW CREATE DATA FROM UI:", data);
-
   const payload = mapJobToApi(data);
-
-  const res = await axiosClient.post("/admin/jobs", payload);
-
-  console.log("✅ CREATE JOB RESPONSE:", res);
-
-  return res;
+  return axiosClient.post("/admin/jobs", payload);
 };
 
-
-// ✅ Update Job
 export const updateJob = async (jobId: string, data: any) => {
-
-  console.log("📦 RAW UPDATE DATA FROM UI:", data);
-
   const payload = mapJobToApi(data);
-
-  console.log("📤 SENDING UPDATE REQUEST:", jobId, payload);
-
-  const res = await axiosClient.patch(`/admin/jobs/${jobId}`, payload);
-
-  console.log("📥 UPDATE API RESPONSE:", res);
-
-  return res;
+  return axiosClient.patch(`/admin/jobs/${jobId}`, payload);
 };
 
-
-// ✅ Delete Job
 export const deleteJob = async (jobId: string) => {
-
-  console.log("🗑 DELETE JOB:", jobId);
-
-  const res = await axiosClient.delete(`/admin/jobs/${jobId}`);
-
-  console.log("✅ DELETE RESPONSE:", res);
-
-  return res;
+  return axiosClient.delete(`/admin/jobs/${jobId}`);
 };

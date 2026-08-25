@@ -20,18 +20,18 @@ import {
   CheckCircle2,
   FileCheck,
   Briefcase,
-  Search,
   Download,
   Plus,
 } from "lucide-react";
 
-import { User, UserStatus, ViewState, Job, JobStatus } from "./types";
+import { User, UserStatus, ViewState, Job } from "./types";
 import { adminLogin as loginAdmin } from "./api/adminApi";
 import {
   getDiscoveryCallEnquiries,
   getAiEngineerAcceleratorEnquiries,
   getCareerAuditBookings,
 } from "./api/adminEnquiryApi";
+import { getAllJobs, getJobStats } from "./api/adminJobApi";
 import axiosClient from "./api/axiosClient";
 import {
   clearAdminSession,
@@ -122,7 +122,15 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
    DASHBOARD STATS
 ===================================================== */
 
-const DashboardStats = ({ users, jobs }: { users: User[]; jobs: Job[] }) => {
+const DashboardStats = ({
+  users,
+  activeJobs,
+  offersGiven,
+}: {
+  users: User[];
+  activeJobs: number;
+  offersGiven: number;
+}) => {
   const stats = [
     {
       label: "Total Seekers",
@@ -131,7 +139,7 @@ const DashboardStats = ({ users, jobs }: { users: User[]; jobs: Job[] }) => {
     },
     {
       label: "Active Jobs",
-      value: jobs.length,
+      value: activeJobs,
       icon: Briefcase,
     },
     {
@@ -143,9 +151,7 @@ const DashboardStats = ({ users, jobs }: { users: User[]; jobs: Job[] }) => {
     },
     {
       label: "Offers Given",
-      value: jobs.filter(
-        (j: any) => j.status === "OFFER" || j.status === JobStatus.OFFER,
-      ).length,
+      value: offersGiven,
       icon: FileCheck,
     },
   ];
@@ -180,10 +186,9 @@ export default function App() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobStats, setJobStats] = useState({ activeJobs: 0, offersGiven: 0 });
   
   const [loadingStats, setLoadingStats] = useState(true);
-
-  const [jobSearch, setJobSearch] = useState("");
 
   const [jobModalOpen, setJobModalOpen] = useState(false);
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -193,10 +198,25 @@ const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   /* ================= EXPORT JOBS ================= */
 
-  const exportJobs = () => {
+  const loadAllJobsForExport = async () => {
+    const pageSize = 500;
+    const firstPage: any = await getAllJobs({ page: 0, size: pageSize });
+    const allJobs = [...unwrap(firstPage)];
+    const totalPages = Number(firstPage?.totalPages ?? 1);
+
+    for (let page = 1; page < totalPages; page += 1) {
+      const res = await getAllJobs({ page, size: pageSize });
+      allJobs.push(...unwrap(res));
+    }
+
+    return allJobs;
+  };
+
+  const exportJobs = async () => {
+    const exportRows = await loadAllJobsForExport();
     const headers = ["ID", "Title", "Company", "Location", "Type", "Salary"];
 
-    const rows = jobs.map((j: any) => [
+    const rows = exportRows.map((j: any) => [
       j.job_id || j.id,
       j.job_title || j.title,
       j.company,
@@ -224,8 +244,9 @@ const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   /* ================= EXCEL EXPORT ================= */
 
-  const exportJobsExcel = () => {
-    const data = jobs.map((j: any) => ({
+  const exportJobsExcel = async () => {
+    const exportRows = await loadAllJobsForExport();
+    const data = exportRows.map((j: any) => ({
       ID: j.job_id || j.id,
       Title: j.job_title || j.title,
       Company: j.company,
@@ -251,7 +272,8 @@ const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   /* ================= PDF EXPORT ================= */
 
-  const exportJobsPDF = () => {
+  const exportJobsPDF = async () => {
+    const exportRows = await loadAllJobsForExport();
     const doc = new jsPDF({ orientation: "landscape" });
 
     const columns = [
@@ -269,7 +291,7 @@ const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
       "Connections",
     ];
 
-    const rows = jobs.map((j: any) => [
+    const rows = exportRows.map((j: any) => [
       j.job_id || j.id,
       j.job_title || j.title,
       j.company,
@@ -594,14 +616,21 @@ const handleTogglePremium = async (user: User, value: boolean) => {
     try {
       setLoadingStats(true);
 
-      const usersRes = await axiosClient.get("/admin/users");
-      const jobsRes = await axiosClient.get("/admin/jobs");
+      const [usersRes, jobsRes, statsRes]: any = await Promise.all([
+        axiosClient.get("/admin/users"),
+        getAllJobs({ page: 0, size: 5 }),
+        getJobStats(),
+      ]);
 
       const usersData = unwrap(usersRes);
       const jobsData = unwrap(jobsRes);
 
       setUsers(usersData);
       setJobs(jobsData);
+      setJobStats({
+        activeJobs: Number(statsRes?.activeJobs ?? jobsRes?.totalElements ?? jobsData.length),
+        offersGiven: Number(statsRes?.offersGiven ?? 0),
+      });
     } catch (err) {
       console.error("Stats load failed", err);
     } finally {
@@ -660,7 +689,13 @@ const handleTogglePremium = async (user: User, value: boolean) => {
                 Create User
               </Button>
             </div>
-            {!loadingStats && <DashboardStats users={users} jobs={jobs} />}
+            {!loadingStats && (
+              <DashboardStats
+                users={users}
+                activeJobs={jobStats.activeJobs}
+                offersGiven={jobStats.offersGiven}
+              />
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card title="Recent Users">
