@@ -122,6 +122,7 @@ export type ViewState =
   | 'requests'
   | 'users'
   | 'jobs'
+  | 'referral-community'
   | 'discovery-call-enquiries'
   | 'ai-engineer-accelerator-enquiries'
   | 'career-audit-bookings';

@@ -5,6 +5,7 @@ import { JobTable } from "./components/JobTable";
 import { DiscoveryCallEnquiryTable } from "./components/DiscoveryCallEnquiryTable";
 import { AiEngineerAcceleratorEnquiryTable } from "./components/AiEngineerAcceleratorEnquiryTable";
 import { CareerAuditBookingTable } from "./components/CareerAuditBookingTable";
+import { ReferralCommunityPage } from "./components/ReferralCommunityPage";
 import { Card, Button, Input } from "./components/UI";
 import { UserFormModal } from "./components/UserFormModal";
 import { JobFormModal } from "./components/Modals";
@@ -793,6 +794,7 @@ const handleTogglePremium = async (user: User, value: boolean) => {
             <JobTable />
           </div>
         )}
+        {view === "referral-community" && <ReferralCommunityPage />}
 
         {view === "discovery-call-enquiries" && (
           <div className="animate-fadeIn">

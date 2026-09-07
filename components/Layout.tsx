@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Briefcase, Phone, GraduationCap, CalendarCheck } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Briefcase, Phone, GraduationCap, CalendarCheck, Star } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface LayoutProps {
@@ -17,6 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onChangeV
     { id: 'requests', label: 'Signup Requests', icon: UserPlus },
     { id: 'users', label: 'All Users', icon: Users },
     { id: 'jobs', label: 'Jobs', icon: Briefcase },
+    { id: 'referral-community', label: 'Referral Community', icon: Star },
     { id: 'discovery-call-enquiries', label: 'Discovery Call Forms', icon: Phone },
     { id: 'ai-engineer-accelerator-enquiries', label: 'AI Accelerator Forms', icon: GraduationCap },
     { id: 'career-audit-bookings', label: 'Career Audit Bookings', icon: CalendarCheck },
