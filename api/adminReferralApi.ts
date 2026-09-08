@@ -11,8 +11,10 @@ export const updateReferralOpeningStatus = (id: string, status: string) =>
   axiosClient.patch(`/admin/referrals/openings/${id}/status`, { status });
   export const updateReferralRequest = (id: string, payload: Record<string, unknown>) => 
     axiosClient.patch(`/admin/referrals/requests/${id}`, payload);
-export const sendReferralFollowUp = (id: string) =>
-  axiosClient.post(`/admin/referrals/requests/${id}/follow-up`);
+export const sendReferralFollowUp = (id: string, payload?: { recipientEmail: string; message: string }) =>
+  axiosClient.post(`/admin/referrals/requests/${id}/follow-up`, payload || {});
+export const sendReferralEmail = (id: string, payload: { recipientEmail: string; message: string }) =>
+  axiosClient.post(`/admin/referrals/requests/${id}/send`, payload);
 export const updateReferralCompanyVisibility = (id: string, payload: Record<string, unknown>) =>
   axiosClient.patch(`/admin/referrals/companies/${id}/visibility`, payload);
 export const updateReferralContactStatus = (

@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
     return {
       base: '/admin/',
       server: {
-        port: 3000,
+        port: 3001,
         host: '0.0.0.0',
         proxy: {
           // Proxy only backend admin APIs, not the frontend app served at /admin/
