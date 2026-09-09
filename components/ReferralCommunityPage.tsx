@@ -114,7 +114,7 @@ const ContactModal = ({ form, setForm, onSubmit, onClose, saving }: any) => (
           <Input
             key={key}
             label={labelText}
-            type={String(key).includes("Email") ? "email" : "text"}
+            type={String(key).toLowerCase().includes("email") ? "email" : "text"}
             required={String(labelText).includes("*")}
             value={form[key]}
             onChange={(e) => setForm({ ...form, [key]: e.target.value })}
@@ -695,7 +695,7 @@ export const ReferralCommunityPage = () => {
   const viewCv = async (fileName: string) => {
     try {
       const response = await axiosClient.get<Blob>(
-        `/admin/referrals/cv/${encodeURIComponent(fileName)}`,
+        `/api/admin/referrals/cv/${encodeURIComponent(fileName)}`,
         { responseType: "blob" },
       );
       const fileUrl = URL.createObjectURL(
