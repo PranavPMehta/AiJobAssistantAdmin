@@ -1,6 +1,19 @@
 import axiosClient from "./axiosClient";
 
-export const getReferralOverview = () => axiosClient.get("/admin/referrals");
+export type ReferralOverview = {
+  stats?: Record<string, number>;
+  contacts?: unknown[];
+  openings?: unknown[];
+  requests?: unknown[];
+  companies?: unknown[];
+};
+
+export const getReferralOverview = async (): Promise<ReferralOverview> => {
+  const overview = await axiosClient.get<ReferralOverview>("/admin/referrals");
+
+  // axiosClient's response interceptor returns the payload rather than AxiosResponse.
+  return overview as unknown as ReferralOverview;
+};
 export const createReferralContact = (payload: Record<string, unknown>) =>
   axiosClient.post("/admin/referrals/contacts", payload);
 export const createReferralOpening = (payload: Record<string, unknown>) =>
