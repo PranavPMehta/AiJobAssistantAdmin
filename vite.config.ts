@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
           '/admin/user': createAdminApiProxy(apiTarget),
           '/admin/jobs': createAdminApiProxy(apiTarget),
           '/admin/enquiries': createAdminApiProxy(apiTarget),
+          '/api': createAdminApiProxy(apiTarget),
           '/backend-admin-api': {
             ...createAdminApiProxy(enquiryApiTarget),
             rewrite: (path) => path.replace(/^\/backend-admin-api/, ''),
