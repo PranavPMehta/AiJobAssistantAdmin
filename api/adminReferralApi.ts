@@ -24,6 +24,8 @@ export const updateReferralOpening = (id: string,payload: Record<string, unknown
   axiosClient.patch(`${ADMIN_REFERRALS_API}/openings/${id}`, payload);
 export const updateReferralOpeningStatus = (id: string, status: string) => 
   axiosClient.patch(`${ADMIN_REFERRALS_API}/openings/${id}/status`, { status });
+export const deleteReferralOpening = (id: string) =>
+  axiosClient.delete(`${ADMIN_REFERRALS_API}/openings/${id}`);
   export const updateReferralRequest = (id: string, payload: Record<string, unknown>) => 
     axiosClient.patch(`${ADMIN_REFERRALS_API}/requests/${id}`, payload);
 export const sendReferralFollowUp = (id: string, payload?: { recipientEmail: string; message: string }) =>
@@ -34,3 +36,5 @@ export const updateReferralCompanyVisibility = (id: string, payload: Record<stri
   axiosClient.patch(`${ADMIN_REFERRALS_API}/companies/${id}/visibility`, payload);
 export const updateReferralContactStatus = (
   contactId: string,active: boolean) =>axiosClient.patch(`${ADMIN_REFERRALS_API}/contacts/${contactId}/status`,{ active });
+export const deleteReferralContact = (contactId: string) =>
+  axiosClient.delete(`${ADMIN_REFERRALS_API}/contacts/${contactId}`);

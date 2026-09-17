@@ -9,8 +9,8 @@ const isDev = window.location.hostname === "localhost"||
   window.location.hostname === "127.0.0.1";
 
 const axiosClient = axios.create({
-  baseURL: isDev ? "" : "https://dheerajrathodconsult.com",
-  // baseURL: isDev ? "http://localhost:8090" : "",
+  // baseURL: isDev ? "" : "https://dheerajrathodconsult.com",
+  baseURL: isDev ? "http://localhost:8090" : "",
   headers: {
     "Content-Type": "application/json",
   },

@@ -11,6 +11,7 @@ import {
   Phone,
   Plus,
   RefreshCw,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -18,6 +19,8 @@ import { Button, Input, Select, Toggle } from "./UI";
 import {
   createReferralContact,
   createReferralOpening,
+  deleteReferralContact,
+  deleteReferralOpening,
   getReferralOverview,
   sendReferralFollowUp,
   sendReferralEmail,
@@ -622,6 +625,11 @@ export const ReferralCommunityPage = () => {
   const [openingCompanyFilter, setOpeningCompanyFilter] = useState("ALL");
   const [requestRouteFilter, setRequestRouteFilter] = useState("ALL");
   const [requestStatusFilter, setRequestStatusFilter] = useState("ALL");
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "opening" | "contact";
+    id: string;
+    label: string;
+  } | null>(null);
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -818,6 +826,28 @@ export const ReferralCommunityPage = () => {
       setSaving(false);
     }
   };
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setSaving(true);
+      setError("");
+      if (deleteTarget.type === "opening") {
+        await deleteReferralOpening(deleteTarget.id);
+      } else {
+        await deleteReferralContact(deleteTarget.id);
+      }
+      setDeleteTarget(null);
+      await load();
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+          e?.message ||
+          `Unable to delete this ${deleteTarget.type}.`,
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
   const stats = data.stats || {};
   const tabs: { id: Tab; text: string; count: number }[] = [
     {
@@ -933,6 +963,12 @@ export const ReferralCommunityPage = () => {
           onContactStatus={changeContactStatus}
           onEditOpening={editOpening}
           onOpeningStatus={changeOpeningStatus}
+          onDeleteOpening={(opening: any) =>
+            setDeleteTarget({ type: "opening", id: opening.id, label: opening.title })
+          }
+          onDeleteContact={(contact: any) =>
+            setDeleteTarget({ type: "contact", id: contact.id, label: contact.fullName })
+          }
           openingSearch={openingSearch}
           setOpeningSearch={setOpeningSearch}
           openingStatusFilter={openingStatusFilter}
@@ -1041,6 +1077,26 @@ export const ReferralCommunityPage = () => {
           </div>
         </div>
       )}
+      {deleteTarget && (
+        <Modal
+          title={`Delete ${deleteTarget.type === "opening" ? "referral opening" : "community member"}`}
+          onClose={() => !saving && setDeleteTarget(null)}
+        >
+          <div className="p-5">
+            <p className="text-sm leading-6 text-slate-300">
+              Permanently delete <span className="font-semibold text-white">{deleteTarget.label}</span>? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" variant="ghost" disabled={saving} onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+              <Button type="button" isLoading={saving} onClick={confirmDelete} className="bg-red-500 hover:bg-red-400">
+                OK
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
@@ -1055,6 +1111,8 @@ const Content = ({
   onContactStatus,
   onEditOpening,
   onOpeningStatus,
+  onDeleteOpening,
+  onDeleteContact,
   openingSearch,
   setOpeningSearch,
   openingStatusFilter,
@@ -1122,6 +1180,7 @@ const Content = ({
                   "Openings",
                   "Requests",
                   "Status",
+                  "Delete",
                 ].map((x) => (
                   <th key={x} className={th}>
                     {x}
@@ -1182,6 +1241,17 @@ const Content = ({
                       />
                     </button>
                   </td>
+                  <td className={td}>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteContact(c)}
+                      className="rounded-lg border border-red-500/30 p-2 text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
+                      title="Delete community member"
+                      aria-label={`Delete ${c.fullName}`}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1240,6 +1310,7 @@ const Content = ({
                   "On portal",
                   "Status",
                   "Actions",
+                  "Delete",
                 ].map((x) => (
                   <th key={x} className={th}>
                     {x}
@@ -1251,7 +1322,7 @@ const Content = ({
               {filteredOpenings.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={11}
                     className="px-4 py-10 text-center text-sm text-slate-500"
                   >
                     No referral openings found.
@@ -1325,6 +1396,17 @@ const Content = ({
                       >
                         Edit
                       </Button>
+                    </td>
+                    <td className={td}>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteOpening(o)}
+                        className="rounded-lg border border-red-500/30 p-2 text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
+                        title="Delete referral opening"
+                        aria-label={`Delete ${o.title}`}
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </td>
                   </tr>
                 ))
